@@ -7,7 +7,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  base: process.env.NODE_ENV === 'production' ? '/project/' : '/',
+  base: '/sekabusiness/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
