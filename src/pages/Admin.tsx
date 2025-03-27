@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tool, Prompt, BlogPost } from '../types';
-import { Edit, Trash2, Save, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
 import { Session } from '@supabase/supabase-js';
+import { useTranslation } from 'react-i18next';
+import TextEditor from '../components/TextEditor';
 
 interface Category {
   id: string;
@@ -13,6 +15,7 @@ interface Category {
 }
 
 const Admin: React.FC = () => {
+  const { t } = useTranslation();
   const [session, setSession] = useState<Session | null>(null);
   const [activeTab, setActiveTab] = useState<'tools' | 'prompts' | 'blog'>('tools');
   const [tools, setTools] = useState<Tool[]>([]);
@@ -31,6 +34,11 @@ const Admin: React.FC = () => {
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [codeForm, setCodeForm] = useState({
+    language: 'bash',
+    content: ''
+  });
 
   // Form states
   const [toolForm, setToolForm] = useState({
@@ -123,9 +131,9 @@ const Admin: React.FC = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error(t('admin.error.login'));
     } else {
-      toast.success('Logged in successfully!');
+      toast.success(t('admin.success.login'));
     }
   };
 
@@ -134,7 +142,7 @@ const Admin: React.FC = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Logged out successfully!');
+      toast.success(t('admin.success.logout'));
     }
   };
 
@@ -147,13 +155,13 @@ const Admin: React.FC = () => {
           .update(toolForm)
           .eq('id', editingId);
         if (error) throw error;
-        toast.success('Tool updated successfully!');
+        toast.success(t('admin.success.toolUpdate'));
       } else {
         const { error } = await supabase
           .from('tools')
           .insert([toolForm]);
         if (error) throw error;
-        toast.success('Tool added successfully!');
+        toast.success(t('admin.success.toolAdd'));
       }
       setToolForm({
         name: '',
@@ -168,7 +176,7 @@ const Admin: React.FC = () => {
       setIsEditing(false);
       fetchData();
     } catch (error) {
-      toast.error('Error saving tool');
+      toast.error(t('admin.error.saveTool'));
       console.error('Error:', error);
     }
   };
@@ -182,13 +190,13 @@ const Admin: React.FC = () => {
           .update(promptForm)
           .eq('id', editingId);
         if (error) throw error;
-        toast.success('Prompt updated successfully!');
+        toast.success(t('admin.success.promptUpdate'));
       } else {
         const { error } = await supabase
           .from('prompts')
           .insert([promptForm]);
         if (error) throw error;
-        toast.success('Prompt added successfully!');
+        toast.success(t('admin.success.promptAdd'));
       }
       setPromptForm({
         title: '',
@@ -200,7 +208,7 @@ const Admin: React.FC = () => {
       setIsEditing(false);
       fetchData();
     } catch (error) {
-      toast.error('Error saving prompt');
+      toast.error(t('admin.error.savePrompt'));
       console.error('Error:', error);
     }
   };
@@ -214,13 +222,13 @@ const Admin: React.FC = () => {
           .update({ ...blogForm, updated_at: new Date().toISOString() })
           .eq('id', editingId);
         if (error) throw error;
-        toast.success('Blog post updated successfully!');
+        toast.success(t('admin.success.postUpdate'));
       } else {
         const { error } = await supabase
           .from('blog_posts')
           .insert([blogForm]);
         if (error) throw error;
-        toast.success('Blog post added successfully!');
+        toast.success(t('admin.success.postAdd'));
       }
       setBlogForm({
         title: '',
@@ -231,23 +239,23 @@ const Admin: React.FC = () => {
       setIsEditing(false);
       fetchData();
     } catch (error) {
-      toast.error('Error saving blog post');
+      toast.error(t('admin.error.savePost'));
       console.error('Error:', error);
     }
   };
 
   const handleDelete = async (id: string, table: string) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
+    if (window.confirm(t('admin.tools.confirmDelete'))) {
       try {
         const { error } = await supabase
           .from(table)
           .delete()
           .eq('id', id);
         if (error) throw error;
-        toast.success('Item deleted successfully!');
+        toast.success(t('admin.success.delete'));
         fetchData();
       } catch (error) {
-        toast.error('Error deleting item');
+        toast.error(t('admin.error.delete'));
         console.error('Error:', error);
       }
     }
@@ -370,6 +378,16 @@ const Admin: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  const handleInsertCode = () => {
+    const codeBlock = `\`\`\`${codeForm.language}\n${codeForm.content}\n\`\`\``;
+    setBlogForm(prev => ({
+      ...prev,
+      content: prev.content + (prev.content ? '\n\n' : '') + codeBlock
+    }));
+    setCodeForm({ language: 'bash', content: '' });
+    setShowCodeModal(false);
   };
 
   if (!session) {
@@ -810,13 +828,11 @@ const Admin: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Content</label>
-                <textarea
+                <label className="block text-sm font-medium mb-2">{t('admin.blog.content')}</label>
+                <TextEditor
                   value={blogForm.content}
-                  onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
-                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none"
-                  rows={10}
-                  required
+                  onChange={(value) => setBlogForm({ ...blogForm, content: value })}
+                  onAddCode={() => setShowCodeModal(true)}
                 />
               </div>
               <div className="flex space-x-2">
@@ -916,6 +932,57 @@ const Admin: React.FC = () => {
             <div className="prose prose-invert max-w-none">
               <div className="text-gray-300 whitespace-pre-line">
                 {selectedPost.content}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Code Block Modal */}
+      {showCodeModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-xl font-semibold mb-4">{t('blog.addCode')}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{t('blog.codeLanguage')}</label>
+                <select
+                  value={codeForm.language}
+                  onChange={(e) => setCodeForm({ ...codeForm, language: e.target.value })}
+                  className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 outline-none"
+                >
+                  <option value="bash">Bash</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="python">Python</option>
+                  <option value="html">HTML</option>
+                  <option value="css">CSS</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">{t('blog.codeContent')}</label>
+                <textarea
+                  value={codeForm.content}
+                  onChange={(e) => setCodeForm({ ...codeForm, content: e.target.value })}
+                  className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 outline-none font-mono"
+                  rows={8}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCodeModal(false)}
+                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInsertCode}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  {t('common.insert')}
+                </button>
               </div>
             </div>
           </div>

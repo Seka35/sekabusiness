@@ -7,5 +7,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  base: './'
+  base: process.env.NODE_ENV === 'production' ? '/project/' : '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+  }
 });

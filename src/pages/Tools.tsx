@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tool, Category } from '../types';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Share2 } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const Tools: React.FC = () => {
+  const { t } = useTranslation();
   const [tools, setTools] = useState<Tool[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredTools, setFilteredTools] = useState<Record<string, Tool[]>>({});
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTools = async () => {
@@ -125,10 +129,22 @@ const Tools: React.FC = () => {
     });
   };
 
+  const handleShare = async (tool: Tool) => {
+    const url = `${window.location.origin}?tool=${tool.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(tool.id);
+      toast.success(t('tools.urlCopied'));
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      toast.error(t('tools.copyError'));
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-        AI Tools Directory
+        {t('tools.title')}
       </h1>
 
       <div className="mb-8 space-y-4">
@@ -142,7 +158,7 @@ const Tools: React.FC = () => {
                 category: tool.categories?.name
               }))}
               onSearch={handleSearch}
-              placeholder="Search tools by name, description, or category..."
+              placeholder={t('tools.search')}
             />
           </div>
           <select
@@ -150,7 +166,7 @@ const Tools: React.FC = () => {
             onChange={(e) => handleCategoryChange(e.target.value)}
             className="w-full sm:w-auto px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
           >
-            <option value="all">All Categories</option>
+            <option value="all">{t('admin.tools.allCategories')}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -163,7 +179,7 @@ const Tools: React.FC = () => {
       <div className="space-y-12">
         {Object.entries(filteredTools).map(([categoryId, categoryTools]) => {
           const category = categories.find(c => c.id === categoryId);
-          if (!category) return null;
+          if (!category || categoryTools.length === 0) return null;
 
           return (
             <div key={categoryId} className="space-y-6">
@@ -189,72 +205,72 @@ const Tools: React.FC = () => {
                           }}
                         />
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold group-hover:text-blue-400 transition-colors">
-                            {tool.name}
-                          </h3>
+                          <div className="flex items-center">
+                            <h3 className="text-lg font-semibold group-hover:text-blue-400 transition-colors">
+                              {tool.name}
+                            </h3>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShare(tool);
+                              }}
+                              className="ml-2 p-1 hover:bg-gray-700/50 rounded transition-all"
+                              title={t('tools.share')}
+                            >
+                              <Share2 className={`w-4 h-4 ${copiedId === tool.id ? 'text-green-400' : 'text-gray-400'}`} />
+                            </button>
+                          </div>
                           <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
                             {tool.categories?.name}
                           </span>
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="relative">
-                          <p className={`text-gray-400 text-sm ${!expandedDescriptions.has(tool.id) ? 'line-clamp-3' : ''}`}>
-                            {tool.description}
-                          </p>
-                          {tool.description.length > 150 && (
-                            <button
-                              onClick={() => toggleDescription(tool.id)}
-                              className="mt-2 flex items-center text-blue-400 hover:text-blue-300 text-sm"
-                            >
-                              {expandedDescriptions.has(tool.id) ? (
-                                <>
-                                  <ChevronUp className="w-4 h-4 mr-1" />
-                                  Show less
-                                </>
-                              ) : (
-                                <>
-                                  <ChevronDown className="w-4 h-4 mr-1" />
-                                  Show more
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
+                        <p className={`text-gray-400 text-sm ${!expandedDescriptions.has(tool.id) ? 'line-clamp-3' : ''}`}>
+                          {tool.description}
+                        </p>
+                        {tool.description.length > 150 && (
+                          <button
+                            onClick={() => toggleDescription(tool.id)}
+                            className="text-blue-400 hover:text-blue-300 text-sm mt-2 flex items-center"
+                          >
+                            {expandedDescriptions.has(tool.id) ? (
+                              <>
+                                {t('tools.showLess')}
+                                <ChevronUp className="w-4 h-4 ml-1" />
+                              </>
+                            ) : (
+                              <>
+                                {t('tools.showMore')}
+                                <ChevronDown className="w-4 h-4 ml-1" />
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-                        <span className="text-xs text-gray-500">
-                          {tool.subcategory}
-                        </span>
+                      <div className="mt-4">
                         <a
                           href={tool.website_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-gray-400 hover:text-blue-400 transition-colors flex items-center"
+                          className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
                         >
-                          Visit site
-                          <svg
-                            className="w-4 h-4 ml-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
+                          {t('tools.visitWebsite')}
                         </a>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+              {categoryTools.length === 0 && (
+                <p className="text-gray-400 text-center py-4">{t('tools.noResults')}</p>
+              )}
             </div>
           );
         })}
+        {Object.keys(filteredTools).length === 0 && (
+          <p className="text-gray-400 text-center py-4">{t('tools.noResults')}</p>
+        )}
       </div>
     </div>
   );
