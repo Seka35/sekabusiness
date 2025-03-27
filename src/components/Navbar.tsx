@@ -51,7 +51,7 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center md:justify-start justify-center w-full md:w-auto">
-            <img src="/logo.png" alt="Logo" className="h-24 w-auto" />
+            <img src={import.meta.env.BASE_URL + 'logo.png'} alt="Logo" className="h-24 w-auto" />
           </Link>
           
           {/* Desktop Menu */}
