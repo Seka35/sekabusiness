@@ -1,0 +1,120 @@
+{
+  "navigation": {
+    "tools": "Outils",
+    "prompts": "Prompts",
+    "blog": "Blog",
+    "admin": "Admin",
+    "login": "Connexion",
+    "logout": "Déconnexion"
+  },
+  "admin": {
+    "title": "Tableau de bord Admin",
+    "login": "Connexion Admin",
+    "email": "Email",
+    "password": "Mot de passe",
+    "tools": {
+      "title": "Outils",
+      "add": "Ajouter un outil",
+      "edit": "Modifier l'outil",
+      "name": "Nom",
+      "category": "Catégorie",
+      "subcategory": "Sous-catégorie",
+      "description": "Description",
+      "logoUrl": "URL du logo",
+      "websiteLink": "Lien du site web",
+      "affiliateLink": "Lien d'affiliation (optionnel)",
+      "selectCategory": "Sélectionner une catégorie",
+      "search": "Rechercher des outils par nom, description ou catégorie...",
+      "allCategories": "Toutes les catégories",
+      "update": "Mettre à jour l'outil",
+      "delete": "Supprimer l'outil",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?"
+    },
+    "prompts": {
+      "title": "Gérer les Prompts",
+      "add": "Ajouter un prompt",
+      "edit": "Modifier le prompt",
+      "name": "Titre",
+      "tool": "Outil",
+      "description": "Description",
+      "promptText": "Texte du prompt",
+      "search": "Rechercher des prompts par titre, description ou outil...",
+      "update": "Mettre à jour le prompt"
+    },
+    "blog": {
+      "title": "Gérer les Articles",
+      "add": "Ajouter un article",
+      "edit": "Modifier l'article",
+      "title": "Titre",
+      "excerpt": "Extrait",
+      "content": "Contenu",
+      "search": "Rechercher des articles par titre ou contenu...",
+      "update": "Mettre à jour l'article",
+      "lastUpdated": "Dernière mise à jour"
+    },
+    "success": {
+      "login": "Connexion réussie !",
+      "logout": "Déconnexion réussie !",
+      "toolAdd": "Outil ajouté avec succès !",
+      "toolUpdate": "Outil mis à jour avec succès !",
+      "promptAdd": "Prompt ajouté avec succès !",
+      "promptUpdate": "Prompt mis à jour avec succès !",
+      "postAdd": "Article ajouté avec succès !",
+      "postUpdate": "Article mis à jour avec succès !",
+      "delete": "Élément supprimé avec succès !"
+    },
+    "error": {
+      "login": "Échec de la connexion",
+      "saveTool": "Erreur lors de l'enregistrement de l'outil",
+      "savePrompt": "Erreur lors de l'enregistrement du prompt",
+      "savePost": "Erreur lors de l'enregistrement de l'article",
+      "delete": "Erreur lors de la suppression de l'élément"
+    }
+  },
+  "tools": {
+    "title": "Répertoire d'Outils IA",
+    "search": "Rechercher des outils...",
+    "noResults": "Aucun outil trouvé",
+    "visitWebsite": "Visiter le site",
+    "showMore": "Voir plus",
+    "showLess": "Voir moins",
+    "share": "Partager l'outil",
+    "urlCopied": "URL de l'outil copiée dans le presse-papiers !",
+    "copyError": "Échec de la copie de l'URL"
+  },
+  "prompts": {
+    "title": "Collection de Prompts IA",
+    "search": "Rechercher des prompts...",
+    "noResults": "Aucun prompt trouvé",
+    "copyPrompt": "Copier le prompt",
+    "promptCopied": "Prompt copié dans le presse-papiers !"
+  },
+  "blog": {
+    "title": "Blog",
+    "search": "Rechercher des articles...",
+    "noResults": "Aucun article trouvé",
+    "readMore": "Lire la suite",
+    "copyCode": "Copier le code",
+    "codeCopied": "Code copié dans le presse-papiers !",
+    "copyError": "Échec de la copie du code",
+    "addCode": "Ajouter un bloc de code",
+    "codeLanguage": "Langage du code",
+    "codeContent": "Contenu du code"
+  },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "loading": "Chargement...",
+    "search": "Rechercher..."
+  },
+  "editor": {
+    "bold": "Gras",
+    "italic": "Italique",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "heading3": "Titre 3",
+    "markdownSupported": "Le formatage Markdown est pris en charge"
+  }
+} 
