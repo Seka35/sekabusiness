@@ -205,20 +205,23 @@ const Tools: React.FC = () => {
                           }}
                         />
                         <div className="flex-1">
-                          <div className="flex items-center">
+                          <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold group-hover:text-blue-400 transition-colors">
                               {tool.name}
                             </h3>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShare(tool);
-                              }}
-                              className="ml-2 p-1 hover:bg-gray-700/50 rounded transition-all"
-                              title={t('tools.share')}
-                            >
-                              <Share2 className={`w-4 h-4 ${copiedId === tool.id ? 'text-green-400' : 'text-gray-400'}`} />
-                            </button>
+                            <span className={`text-sm px-3 py-1 rounded bg-gray-900/80 ${
+                              tool.price_type === 'free'
+                                ? 'text-green-400'
+                                : tool.price_type === 'paid'
+                                ? 'text-purple-400'
+                                : 'text-yellow-500'
+                            } font-medium`}>
+                              {tool.price_type === 'free' 
+                                ? 'Free'
+                                : tool.price_type === 'paid'
+                                ? tool.price || 'Paid'
+                                : 'Freemium'}
+                            </span>
                           </div>
                           <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
                             {tool.categories?.name}

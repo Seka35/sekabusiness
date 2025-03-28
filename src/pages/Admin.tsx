@@ -49,6 +49,8 @@ const Admin: React.FC = () => {
     logo_url: '',
     website_link: '',
     affiliate_link: '',
+    price_type: 'free',
+    price: '',
   });
 
   const [promptForm, setPromptForm] = useState({
@@ -150,19 +152,30 @@ const Admin: React.FC = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('tools')
           .update(toolForm)
           .eq('id', editingId);
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Update error:', error);
+          toast.error(`Error: ${error.message}`);
+          return;
+        }
         toast.success(t('admin.success.toolUpdate'));
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('tools')
           .insert([toolForm]);
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Insert error:', error);
+          toast.error(`Error: ${error.message}`);
+          return;
+        }
         toast.success(t('admin.success.toolAdd'));
       }
+      
       setToolForm({
         name: '',
         description: '',
@@ -171,13 +184,15 @@ const Admin: React.FC = () => {
         logo_url: '',
         website_link: '',
         affiliate_link: '',
+        price_type: 'free',
+        price: '',
       });
       setEditingId(null);
       setIsEditing(false);
       fetchData();
     } catch (error) {
-      toast.error(t('admin.error.saveTool'));
-      console.error('Error:', error);
+      console.error('Submission error:', error);
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -272,6 +287,8 @@ const Admin: React.FC = () => {
       logo_url: '',
       website_link: '',
       affiliate_link: '',
+      price_type: 'free',
+      price: '',
     });
     setShowToolForm(true);
   };
@@ -291,6 +308,8 @@ const Admin: React.FC = () => {
         logo_url: item.logo_url,
         website_link: item.website_link,
         affiliate_link: item.affiliate_link || '',
+        price_type: item.price_type || 'free',
+        price: item.price || '',
       });
     } else if (type === 'prompts') {
       setPromptForm({
@@ -569,6 +588,29 @@ const Admin: React.FC = () => {
                       className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none text-white"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Price Type</label>
+                    <select
+                      value={toolForm.price_type}
+                      onChange={(e) => setToolForm({ ...toolForm, price_type: e.target.value as 'free' | 'paid' | 'freemium' })}
+                      className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none text-white"
+                      required
+                    >
+                      <option value="free">Free</option>
+                      <option value="paid">Paid</option>
+                      <option value="freemium">Freemium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Price (optional)</label>
+                    <input
+                      type="text"
+                      value={toolForm.price}
+                      onChange={(e) => setToolForm({ ...toolForm, price: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none text-white"
+                      placeholder="e.g. $10/month, Free trial available"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
@@ -602,6 +644,8 @@ const Admin: React.FC = () => {
                           logo_url: '',
                           website_link: '',
                           affiliate_link: '',
+                          price_type: 'free',
+                          price: '',
                         });
                       }}
                       className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"

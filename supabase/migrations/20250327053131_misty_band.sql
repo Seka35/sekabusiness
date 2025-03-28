@@ -17,6 +17,8 @@
       - `logo_url` (text) - Tool logo URL
       - `website_link` (text) - Official website
       - `affiliate_link` (text, optional) - Affiliate link
+      - `price_type` (text) - Price type
+      - `price` (text) - Price
       - `created_at` (timestamp)
     
     - `prompts` - Prompt library
@@ -72,6 +74,8 @@ CREATE TABLE tools (
   logo_url text NOT NULL,
   website_link text NOT NULL,
   affiliate_link text,
+  price_type text NOT NULL DEFAULT 'free' CHECK (price_type IN ('free', 'paid', 'freemium')),
+  price text,
   created_at timestamptz DEFAULT now()
 );
 

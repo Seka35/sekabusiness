@@ -17,6 +17,8 @@ export interface Tool {
   logo_url: string;
   affiliate_link?: string;
   website_link: string;
+  price_type: 'free' | 'paid' | 'freemium';
+  price?: string;
   created_at: string;
   updated_at?: string;
 }
