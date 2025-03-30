@@ -138,48 +138,67 @@ const Profile: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <div className="flex items-center mb-6">
-            <UserIcon className="w-8 h-8 text-blue-500 mr-3" />
-            <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="bg-gray-800 rounded-lg p-8 mb-6 shadow-xl">
+          <div className="flex items-center justify-between mb-8 border-b border-gray-700 pb-6">
+            <div className="flex items-center">
+              <UserIcon className="w-10 h-10 text-blue-500 mr-4" />
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+                <p className="text-gray-400">{user.email}</p>
+              </div>
+            </div>
           </div>
 
           {/* Subscription Status */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CreditCard className="w-6 h-6 text-blue-500 mr-3" />
-              <div>
-                <h2 className="text-lg font-semibold">Subscription Status</h2>
-                <p className="text-gray-300">
-                  {subscriptionStatus.isSubscribed ? (
-                    <>
-                      Active subscription until{' '}
-                      {subscriptionStatus.expiryDate?.toLocaleDateString()}
-                    </>
-                  ) : (
-                    'No active subscription'
-                  )}
-                </p>
+          <div className="bg-gray-900 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-blue-500/10 p-3 rounded-lg mr-4">
+                  <CreditCard className="w-6 h-6 text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold mb-2">Subscription Status</h2>
+                  <p className="text-gray-300">
+                    {subscriptionStatus.isSubscribed ? (
+                      <>
+                        <span className="text-green-500">●</span>{' '}
+                        Active subscription until{' '}
+                        <span className="font-medium">
+                          {subscriptionStatus.expiryDate?.toLocaleDateString()}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-gray-500">●</span>{' '}
+                        No active subscription
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
+              {subscriptionStatus.isSubscribed ? (
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={isLoading}
+                  className="flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  ) : (
+                    <XCircle className="w-5 h-5 mr-2" />
+                  )}
+                  Cancel Subscription
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.location.href = 'https://buy.stripe.com/5kA3fl5SAeEA5J6bII'}
+                  className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                >
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Subscribe Now
+                </button>
+              )}
             </div>
-            {subscriptionStatus.isSubscribed ? (
-              <button
-                onClick={handleCancelSubscription}
-                disabled={isLoading}
-                className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-              >
-                <XCircle className="w-5 h-5 mr-2" />
-                Cancel Subscription
-              </button>
-            ) : (
-              <button
-                onClick={() => window.location.href = 'https://buy.stripe.com/5kA3fl5SAeEA5J6bII'}
-                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <CreditCard className="w-5 h-5 mr-2" />
-                Subscribe Now
-              </button>
-            )}
           </div>
         </div>
       </div>
