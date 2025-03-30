@@ -3,6 +3,7 @@ import { generateChatCompletion } from './openai';
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
+  timestamp?: string;
 }
 
 export async function sendMessage(messages: Message[]) {

@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       if (isSignUp) {
-        // Création de compte
+        // Sign up
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -31,11 +31,11 @@ const Login = () => {
         if (signUpError) throw signUpError;
 
         if (signUpData.user) {
-          toast.success('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-          setIsSignUp(false); // Basculer vers le mode connexion
+          toast.success('Account created successfully! You can now log in.');
+          setIsSignUp(false); // Switch to login mode
         }
       } else {
-        // Connexion
+        // Login
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -44,7 +44,7 @@ const Login = () => {
         if (signInError) throw signInError;
 
         if (signInData.user) {
-          // Vérifier si l'utilisateur est un admin
+          // Check if user is admin
           const { data: adminData } = await supabase
             .from('admins')
             .select('*')
@@ -53,10 +53,10 @@ const Login = () => {
 
           if (adminData) {
             navigate('/admin');
-            toast.success('Connexion admin réussie !');
+            toast.success('Admin login successful!');
           } else {
             navigate('/profile');
-            toast.success('Connexion réussie !');
+            toast.success('Login successful!');
           }
         }
       }
@@ -72,7 +72,7 @@ const Login = () => {
     <div className="max-w-md mx-auto p-6">
       <div className="bg-gray-800 rounded-lg shadow-xl p-8">
         <h1 className="text-2xl font-bold mb-6 text-center">
-          {isSignUp ? 'Création de compte' : 'Connexion'}
+          {isSignUp ? 'Create Account' : 'Login'}
         </h1>
 
         {error && (
@@ -91,14 +91,14 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-gray-700 text-white rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="votre@email.com"
+                placeholder="your@email.com"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Mot de passe</label>
+            <label className="block text-sm font-medium mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -112,7 +112,7 @@ const Login = () => {
               />
             </div>
             <p className="text-sm text-gray-400 mt-1">
-              Minimum 6 caractères
+              Minimum 6 characters
             </p>
           </div>
 
@@ -121,7 +121,7 @@ const Login = () => {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
           >
-            {loading ? 'Chargement...' : (isSignUp ? 'Créer un compte' : 'Se connecter')}
+            {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Login')}
           </button>
 
           <div className="text-center mt-4">
@@ -130,7 +130,7 @@ const Login = () => {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-blue-400 hover:text-blue-300 text-sm"
             >
-              {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte'}
+              {isSignUp ? 'Already have an account? Login' : 'No account? Create one'}
             </button>
           </div>
         </form>

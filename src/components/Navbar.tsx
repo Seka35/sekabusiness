@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { DivideIcon as LucideIcon, Menu, X, Settings, ChevronDown } from 'lucide-react';
+import { DivideIcon as LucideIcon, Menu, X, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
-import FrenchFlag from './flags/FrenchFlag';
-import BritishFlag from './flags/BritishFlag';
 
 interface NavItem {
   name: string;
@@ -23,12 +20,6 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
-  const { t, i18n } = useTranslation();
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
 
   const checkAdminStatus = async (userId: string) => {
     try {
@@ -171,116 +162,69 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
               );
             })}
 
-            {/* Language Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all duration-200"
-              >
-                {i18n.language === 'fr' ? (
-                  <FrenchFlag className="w-5 h-5" />
-                ) : (
-                  <BritishFlag className="w-5 h-5" />
-                )}
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </button>
-
-              {isLangMenuOpen && (
-                <div className="absolute right-0 mt-2 py-2 w-48 bg-gray-800 rounded-lg shadow-xl z-50">
-                  <button
-                    onClick={() => {
-                      changeLanguage('fr');
-                      setIsLangMenuOpen(false);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white"
-                  >
-                    <FrenchFlag className="w-5 h-5 mr-2" />
-                    Français
-                  </button>
-                  <button
-                    onClick={() => {
-                      changeLanguage('en');
-                      setIsLangMenuOpen(false);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white"
-                  >
-                    <BritishFlag className="w-5 h-5 mr-2" />
-                    English
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Auth Button */}
             <button
               onClick={handleAuth}
-              className="flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                isLoggedIn 
+                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300' 
+                  : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-400 hover:from-blue-500/30 hover:to-purple-500/30 hover:text-blue-300'
+              }`}
             >
-              {isLoggedIn ? t('navigation.logout') : t('navigation.login')}
+              {isLoggedIn ? 'Logout' : 'Login'}
             </button>
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white"
-          >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-300 hover:text-white focus:outline-none"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4">
-            {filteredItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 mb-2 ${
-                    isActive
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-2" />
-                  {item.name}
-                </Link>
-              );
-            })}
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {filteredItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
 
-            {/* Language Selector Mobile */}
-            <div className="px-3 py-2">
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 mr-2" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+
               <button
-                onClick={() => changeLanguage('fr')}
-                className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white mb-2"
+                onClick={handleAuth}
+                className={`w-full px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                  isLoggedIn 
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300' 
+                    : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-400 hover:from-blue-500/30 hover:to-purple-500/30 hover:text-blue-300'
+                }`}
               >
-                <FrenchFlag className="w-5 h-5 mr-2" />
-                Français
-              </button>
-              <button
-                onClick={() => changeLanguage('en')}
-                className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white"
-              >
-                <BritishFlag className="w-5 h-5 mr-2" />
-                English
+                {isLoggedIn ? 'Logout' : 'Login'}
               </button>
             </div>
-
-            {/* Auth Button Mobile */}
-            <button
-              onClick={handleAuth}
-              className="w-full px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors mt-4"
-            >
-              {isLoggedIn ? t('navigation.logout') : t('navigation.login')}
-            </button>
           </div>
         )}
       </div>

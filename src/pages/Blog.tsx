@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BlogPost } from '../types';
 import ReactMarkdown from 'react-markdown';
-import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -10,7 +9,6 @@ const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const { t } = useTranslation();
 
   useEffect(() => {
     fetchPosts();
@@ -36,7 +34,9 @@ const Blog: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">{t('blog.title')}</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+        Blog
+      </h1>
       
       <div className="grid gap-8">
         {posts.map((post) => (
@@ -54,7 +54,7 @@ const Blog: React.FC = () => {
               onClick={() => handleReadMore(post)}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >
-              {t('blog.readMore')}
+              Read More
             </button>
           </article>
         ))}

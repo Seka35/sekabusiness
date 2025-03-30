@@ -4,10 +4,8 @@ import { Prompt } from '../types';
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
-import { useTranslation } from 'react-i18next';
 
 const Prompts: React.FC = () => {
-  const { t } = useTranslation();
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [filteredPrompts, setFilteredPrompts] = useState<Prompt[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -38,7 +36,7 @@ const Prompts: React.FC = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedId(id);
-      toast.success(t('prompts.promptCopied'));
+      toast.success('Prompt copied to clipboard!');
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       toast.error('Failed to copy prompt');
@@ -79,7 +77,7 @@ const Prompts: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-        {t('prompts.title')}
+        AI Prompts Library
       </h1>
 
       <div className="mb-8">
@@ -91,13 +89,13 @@ const Prompts: React.FC = () => {
             category: prompt.tool
           }))}
           onSearch={handleSearch}
-          placeholder={t('prompts.search')}
+          placeholder="Search prompts by title, description, or tool..."
         />
       </div>
 
       <div className="space-y-6">
         {filteredPrompts.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">{t('prompts.noResults')}</p>
+          <p className="text-gray-400 text-center py-4">No prompts found matching your search.</p>
         ) : (
           filteredPrompts.map((prompt) => (
             <div
@@ -125,12 +123,12 @@ const Prompts: React.FC = () => {
                         {expandedPrompts.has(prompt.id) ? (
                           <>
                             <ChevronUp className="w-4 h-4 mr-1" />
-                            {t('prompts.showLess')}
+                            Show Less
                           </>
                         ) : (
                           <>
                             <ChevronDown className="w-4 h-4 mr-1" />
-                            {t('prompts.showMore')}
+                            Show More
                           </>
                         )}
                       </button>
@@ -140,7 +138,7 @@ const Prompts: React.FC = () => {
                 <button
                   onClick={() => copyToClipboard(prompt.prompt_text, prompt.id)}
                   className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                  title={t('prompts.copyPrompt')}
+                  title="Copy prompt"
                 >
                   {copiedId === prompt.id ? (
                     <Check className="w-5 h-5 text-green-400" />
