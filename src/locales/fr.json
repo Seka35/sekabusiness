@@ -5,7 +5,8 @@
     "blog": "Blog",
     "admin": "Admin",
     "login": "Connexion",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "chat": "Chat"
   },
   "admin": {
     "title": "Tableau de bord Admin",

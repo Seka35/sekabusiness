@@ -137,3 +137,23 @@ CREATE POLICY "Allow admin write access on blog_posts"
   TO authenticated
   USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
+
+-- Subscriptions Table
+CREATE TABLE subscriptions (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users not null,
+  status text check (status in ('active', 'inactive')) not null,
+  current_period_end timestamp with time zone not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Créer une policy pour que les utilisateurs ne puissent voir que leur propre abonnement
+CREATE POLICY "Users can view own subscription"
+  ON subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Créer une policy pour que seul le système puisse modifier les abonnements
+CREATE POLICY "System can insert/update subscriptions"
+  ON subscriptions FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);

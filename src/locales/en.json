@@ -5,7 +5,8 @@
     "blog": "Blog",
     "admin": "Admin",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "chat": "Chat"
   },
   "admin": {
     "title": "Admin Dashboard",

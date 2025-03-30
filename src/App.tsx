@@ -5,14 +5,33 @@ import Tools from './pages/Tools';
 import Prompts from './pages/Prompts';
 import Blog from './pages/Blog';
 import Admin from './pages/Admin';
-import { Monitor, Sparkles, BookOpen } from 'lucide-react';
+import Chat from './pages/Chat';
+import Subscribe from './pages/Subscribe';
+import Login from './pages/Login';
+import Profile from './pages/Profile';
+import { Monitor, Sparkles, BookOpen, MessageSquare, User } from 'lucide-react';
+import AdminRoute from './components/AdminRoute';
+import { generateChatCompletion } from './lib/openai';
 
 function App() {
   const navItems = [
     { name: 'Tools', path: '/', icon: Monitor },
-    { name: 'Prompts', path: '/prompts', icon: Sparkles },
-    { name: 'Blog', path: '/blog', icon: BookOpen },
+    { name: 'Prompts', path: '/prompts', icon: BookOpen },
+    { name: 'Blog', path: '/blog', icon: Monitor },
+    { name: 'Chat', path: '/chat', icon: MessageSquare },
+    { name: 'Profile', path: '/profile', icon: User },
   ];
+
+  const handleSendMessage = async (userMessage: string) => {
+    try {
+      const response = await generateChatCompletion([
+        { role: 'user', content: userMessage }
+      ]);
+      // Traiter la réponse...
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   return (
     <Router>
@@ -23,7 +42,18 @@ function App() {
             <Route path="/" element={<Tools />} />
             <Route path="/prompts" element={<Prompts />} />
             <Route path="/blog" element={<Blog />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              }
+            />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/subscribe" element={<Subscribe />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         <Toaster position="bottom-right" />
