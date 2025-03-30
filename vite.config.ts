@@ -7,6 +7,7 @@ export default defineConfig({
   envPrefix: 'VITE_',
   server: {
     port: 5173,
+    host: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -18,5 +19,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    sourcemap: true
   },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+  }
 });
