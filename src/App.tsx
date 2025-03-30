@@ -9,9 +9,8 @@ import Chat from './pages/Chat';
 import Subscribe from './pages/Subscribe';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
-import { Monitor, Sparkles, BookOpen, MessageSquare, User } from 'lucide-react';
+import { Monitor, BookOpen, MessageSquare, User } from 'lucide-react';
 import AdminRoute from './components/AdminRoute';
-import { generateChatCompletion } from './lib/openai';
 
 function App() {
   const navItems = [
@@ -21,17 +20,6 @@ function App() {
     { name: 'Chat', path: '/chat', icon: MessageSquare },
     { name: 'Profile', path: '/profile', icon: User },
   ];
-
-  const handleSendMessage = async (userMessage: string) => {
-    try {
-      const response = await generateChatCompletion([
-        { role: 'user', content: userMessage }
-      ]);
-      // Traiter la réponse...
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
 
   return (
     <Router>

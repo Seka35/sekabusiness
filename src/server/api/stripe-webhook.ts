@@ -27,8 +27,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
           .upsert({
             user_id: session.client_reference_id,
             subscription_id: session.subscription,
-            status: 'active',
-            current_period_end: new Date(session.subscription_end * 1000).toISOString()
+            status: 'active'
           });
         break;
 

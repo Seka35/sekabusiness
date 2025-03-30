@@ -3,7 +3,7 @@ import { getStripeInstance } from '../../lib/stripe';
 
 const router = express.Router();
 
-router.post('/cancel-subscription', async (req, res) => {
+router.post('/cancel-subscription', express.json(), async (req, res) => {
   try {
     const { subscriptionId } = req.body;
 

@@ -5,10 +5,9 @@ import toast from 'react-hot-toast';
 
 interface CodeBlockProps {
   code: string;
-  language?: string;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'bash' }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ code }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
