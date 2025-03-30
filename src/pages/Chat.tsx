@@ -72,10 +72,6 @@ const Chat: React.FC = () => {
     checkSubscriptionStatus();
   }, [navigate]);
 
-  const handleSubscribe = () => {
-    navigate('/subscribe');
-  };
-
   const handleSendMessage = async () => {
     if (!input.trim() || !subscriptionStatus.isSubscribed) return;
 

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { CreditCard, User as UserIcon, XCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 interface Subscription {
@@ -19,9 +18,7 @@ interface SubscriptionStatus {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isSubscribed: false,
     expiryDate: null,
@@ -32,10 +29,7 @@ const Profile = () => {
 
   useEffect(() => {
     checkUser();
-    if (user) {
-      fetchSubscription();
-    }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     checkSubscriptionStatus();
@@ -62,7 +56,6 @@ const Profile = () => {
         .single();
 
       if (error) throw error;
-      setSubscription(data);
     } catch (error) {
       console.error('Error fetching subscription:', error);
     }

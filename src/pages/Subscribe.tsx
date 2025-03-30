@@ -10,6 +10,7 @@ const Subscribe: React.FC = () => {
 
   const handleSubscribe = async () => {
     try {
+      setIsLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
@@ -24,6 +25,8 @@ const Subscribe: React.FC = () => {
     } catch (error) {
       console.error('Error:', error);
       toast.error('Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
     }
   };
 

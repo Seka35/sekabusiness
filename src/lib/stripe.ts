@@ -5,11 +5,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia'
 });
 
+export async function getStripeInstance(): Promise<Stripe> {
+  return stripe;
+}
+
 export async function createCheckoutSession(userId: string, priceId: string) {
   try {
     // Get user from Supabase
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
-    if (userError || !user) throw new Error('User not found');
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError || !user || !user.email) throw new Error('User not found or no email');
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({

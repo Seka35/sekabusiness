@@ -6,24 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-const CodeBlock = ({ language, value }: { language: string, value: string }) => {
-  return (
-    <div className="rounded-lg overflow-hidden my-4">
-      <SyntaxHighlighter
-        language={language}
-        style={oneDark}
-        customStyle={{
-          margin: 0,
-          borderRadius: '0.5rem',
-          background: '#1e1e1e',
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
-    </div>
-  );
-};
-
 const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -96,17 +78,16 @@ const Blog: React.FC = () => {
               <div className="prose prose-invert max-w-none">
                 <ReactMarkdown
                   components={{
-                    code({ node, inline, className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || '');
-                      return !inline && match ? (
-                        <CodeBlock
-                          language={match[1]}
-                          value={String(children).replace(/\n$/, '')}
-                        />
-                      ) : (
-                        <code className={className} {...props}>
-                          {children}
-                        </code>
+                    code({ className, children }) {
+                      const language = className ? className.replace('language-', '') : '';
+                      return (
+                        <SyntaxHighlighter
+                          style={oneDark}
+                          language={language}
+                          className="rounded-lg my-4"
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
                       );
                     },
                     p: ({ children }) => (

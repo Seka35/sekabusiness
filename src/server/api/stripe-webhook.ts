@@ -55,7 +55,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
     }
 
     res.json({ received: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error processing webhook:', err);
     res.status(400).send(`Webhook Error: ${err.message}`);
   }
