@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download, Plus, Trash2 } from 'lucide-react';
+import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download, Plus, Trash2, History } from 'lucide-react';
 import { sendMessage, Message } from '../lib/chat';
 import { supabase } from '../lib/supabase';
 import ReactMarkdown from 'react-markdown';
@@ -52,7 +52,8 @@ const Chat: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -370,6 +371,23 @@ const Chat: React.FC = () => {
     </ReactMarkdown>
   );
 
+  // Gestion de l'état initial de la sidebar en fonction de la taille de l'écran
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Écouter les changements de taille d'écran
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -474,50 +492,65 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-20">
-      <div className="flex gap-6 max-w-[2000px] mx-auto">
-        {/* Sidebar */}
-        <div className={`w-80 bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 h-[80vh] flex flex-col ${isSidebarOpen ? '' : 'hidden'}`}>
-          <button
-            onClick={handleNewChat}
-            className="w-full mb-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 shrink-0"
-          >
-            <Plus className="w-5 h-5" />
-            New Chat
-          </button>
-          
-          <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-            {chatHistory.map((chat) => (
-              <Link
-                key={chat.id}
-                to={`/chat/${chat.id}`}
-                className={`block p-3 rounded-lg transition-colors ${
-                  chatId === chat.id
-                    ? 'bg-blue-600/20 border border-blue-500/50'
-                    : 'hover:bg-gray-700/50'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white mb-1 truncate">{chat.title}</h3>
-                    <p className="text-sm text-gray-400 truncate">{chat.last_message}</p>
+    <div className="container mx-auto px-4 py-4 min-h-screen flex flex-col">
+      <div className="flex gap-6 max-w-[2000px] mx-auto flex-1 relative">
+        {/* Bouton pour afficher/masquer l'historique sur mobile */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="md:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800/50 backdrop-blur-sm rounded-lg hover:bg-gray-700/50 transition-colors"
+        >
+          <History className="w-6 h-6" />
+        </button>
+
+        {/* Sidebar avec animation */}
+        <div className={`
+          fixed md:relative w-80 h-[calc(100vh-2rem)] bg-gray-800/50 backdrop-blur-sm rounded-lg
+          transition-all duration-300 ease-in-out z-40
+          ${isSidebarOpen ? 'left-4' : '-left-full'}
+          md:left-0 md:transform-none
+        `}>
+          <div className="flex flex-col h-full p-4">
+            <button
+              onClick={handleNewChat}
+              className="w-full mb-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 shrink-0"
+            >
+              <Plus className="w-5 h-5" />
+              New Chat
+            </button>
+            
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+              {chatHistory.map((chat) => (
+                <Link
+                  key={chat.id}
+                  to={`/chat/${chat.id}`}
+                  className={`block p-3 rounded-lg transition-colors ${
+                    chatId === chat.id
+                      ? 'bg-blue-600/20 border border-blue-500/50'
+                      : 'hover:bg-gray-700/50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-white mb-1 truncate">{chat.title}</h3>
+                      <p className="text-sm text-gray-400 truncate">{chat.last_message}</p>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeleteChat(chat.id, e)}
+                      className="p-1 hover:bg-red-500/20 rounded text-red-400 ml-2 shrink-0"
+                      title="Delete conversation"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={(e) => handleDeleteChat(chat.id, e)}
-                    className="p-1 hover:bg-red-500/20 rounded text-red-400 ml-2 shrink-0"
-                    title="Delete conversation"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Main Chat Area */}
         <div className="flex-1 max-w-4xl flex flex-col">
-          <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
               AI Chat Assistant
             </h1>
@@ -543,7 +576,7 @@ const Chat: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-4 h-[60vh] overflow-y-auto custom-scrollbar">
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-4 h-[calc(100vh-10rem)] overflow-y-auto custom-scrollbar">
             <div className="max-w-full">
               {messages.map((message, index) => (
                 <div
@@ -586,31 +619,34 @@ const Chat: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex gap-4">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              placeholder="Type your message... (Shift + Enter for new line)"
-              className="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 min-w-0"
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isTyping}
-              className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
-                !input.trim() || isTyping
-                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-              }`}
-            >
-              {isTyping ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-              Send
-            </button>
+          {/* Zone de saisie fixe */}
+          <div className="sticky bottom-0 bg-gray-900 pt-4 pb-6">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                placeholder="Type your message... (Shift + Enter for new line)"
+                className="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 min-w-0"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isTyping}
+                className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
+                  !input.trim() || isTyping
+                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                }`}
+              >
+                {isTyping ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                Send
+              </button>
+            </div>
           </div>
         </div>
       </div>
