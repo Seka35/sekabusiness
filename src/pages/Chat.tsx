@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download } from 'lucide-react';
 import { sendMessage, Message } from '../lib/chat';
 import { supabase } from '../lib/supabase';
@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import toast from 'react-hot-toast';
+import { v4 as uuidv4 } from 'uuid';
 
 interface SubscriptionStatus {
   isSubscribed: boolean;
@@ -35,12 +36,14 @@ const Chat: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('gpt-4o-mini');
+  const [chatId, setChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isSubscribed: false,
     expiryDate: null,
   });
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,23 +54,35 @@ const Chat: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    const loadChatHistory = async () => {
+    const initializeChat = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data } = await supabase
+      if (!session?.user) {
+        navigate('/login');
+        return;
+      }
+
+      if (id) {
+        // Load existing chat
+        const { data: chatData } = await supabase
           .from('chat_history')
           .select('messages')
-          .eq('user_id', session.user.id)
+          .eq('id', id)
           .single();
-        
-        if (data?.messages) {
-          setMessages(data.messages);
+
+        if (chatData?.messages) {
+          setMessages(JSON.parse(chatData.messages));
+          setChatId(id);
         }
+      } else {
+        // Create new chat
+        const newChatId = uuidv4();
+        setChatId(newChatId);
+        navigate(`/chat/${newChatId}`);
       }
     };
 
-    loadChatHistory();
-  }, []);
+    initializeChat();
+  }, [id, navigate]);
 
   useEffect(() => {
     const checkSubscriptionStatus = async () => {
@@ -124,18 +139,19 @@ const Chat: React.FC = () => {
 
   const saveChatHistory = async (updatedMessages: Message[]) => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
+    if (session?.user && chatId) {
       await supabase
         .from('chat_history')
         .upsert({ 
+          id: chatId,
           user_id: session.user.id, 
-          messages: updatedMessages 
+          messages: JSON.stringify(updatedMessages)
         });
     }
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || !subscriptionStatus.isSubscribed) return;
+    if (!input.trim() || !subscriptionStatus.isSubscribed || !chatId) return;
 
     const newMessage: Message = {
       content: input,

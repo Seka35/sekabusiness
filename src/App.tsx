@@ -39,6 +39,7 @@ function App() {
               }
             />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:id" element={<Chat />} />
             <Route path="/subscribe" element={<Subscribe />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
