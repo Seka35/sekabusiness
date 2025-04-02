@@ -139,6 +139,20 @@ const Tools: React.FC = () => {
     }
   };
 
+  // Modify the price type color mapping to use more transparent backgrounds
+  const getPriceTypeColor = (priceType: string) => {
+    switch (priceType) {
+      case 'free':
+        return 'bg-green-500/20 text-green-300';
+      case 'freemium':
+        return 'bg-orange-500/20 text-orange-300';
+      case 'paid':
+        return 'bg-purple-500/20 text-purple-300';
+      default:
+        return 'bg-gray-500/20 text-gray-300';
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
@@ -192,25 +206,20 @@ const Tools: React.FC = () => {
                     className="group bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300"
                   >
                     <div className="flex flex-col h-full">
-                      <div className="flex items-start space-x-4 mb-4">
-                        <img
-                          src={tool.logo_url}
-                          alt={tool.name}
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold mb-1">{tool.name}</h3>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-400">{tool.price_type}</span>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start space-x-4">
+                          <img
+                            src={tool.logo_url}
+                            alt={tool.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="text-lg font-semibold mb-1">{tool.name}</h3>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleShare(tool)}
-                          className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                          title="Share tool"
-                        >
-                          <Share2 className="w-4 h-4 text-gray-400" />
-                        </button>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getPriceTypeColor(tool.price_type)}`}>
+                          {tool.price_type.charAt(0).toUpperCase() + tool.price_type.slice(1)}
+                        </span>
                       </div>
                       <p className="text-gray-300 text-sm mb-4">
                         {expandedDescriptions.has(tool.id)

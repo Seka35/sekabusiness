@@ -229,48 +229,93 @@ const Chat: React.FC = () => {
 
   if (!subscriptionStatus.isSubscribed) {
     return (
-      <div className="container mx-auto px-4 py-8 mt-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <MessageSquare className="w-16 h-16 mx-auto mb-6 text-blue-500" />
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              Unlock the Power of AI Chat
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-400 bg-clip-text text-transparent">
+              Unlock the Power of AI
             </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              Experience seamless AI conversations with our advanced GPT-powered chat system
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Transform your workflow with our advanced AI chat system. Get instant answers,
+              creative solutions, and expert assistance 24/7.
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-              <Zap className="w-10 h-10 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Lightning Fast</h3>
-              <p className="text-gray-300">Get instant responses to your questions with our optimized AI system</p>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-              <Shield className="w-10 h-10 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Secure & Private</h3>
-              <p className="text-gray-300">Your conversations are encrypted and never shared with third parties</p>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-              <Clock className="w-10 h-10 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">24/7 Access</h3>
-              <p className="text-gray-300">Get help whenever you need it with unlimited access to our AI chat</p>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg p-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Start Chatting Today</h2>
-            <p className="text-xl mb-8">
-              Subscribe now for only $10/month and get unlimited access to our AI chat system
-            </p>
-            <button
-              onClick={() => window.location.href = 'https://buy.stripe.com/5kA3fl5SAeEA5J6bII'}
-              className="inline-flex items-center px-8 py-4 rounded-lg bg-white text-gray-900 hover:bg-gray-100 transition-colors text-lg font-semibold"
+            <a
+              href="/subscribe"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              <CreditCard className="w-6 h-6 mr-2" />
-              Subscribe Now
-            </button>
+              Start Now - Only $10/month
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-20">
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300">
+              <div className="h-14 w-14 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6">
+                <Zap className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4 text-white">Lightning Fast Responses</h3>
+              <p className="text-gray-300">
+                Get instant, accurate answers to your questions with our optimized AI system.
+              </p>
+            </div>
+
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300">
+              <div className="h-14 w-14 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6">
+                <Shield className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4 text-white">Secure & Private</h3>
+              <p className="text-gray-300">
+                Your conversations are encrypted and never shared with third parties.
+              </p>
+            </div>
+
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300">
+              <div className="h-14 w-14 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6">
+                <Clock className="w-8 h-8 text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4 text-white">24/7 Availability</h3>
+              <p className="text-gray-300">
+                Access our AI assistant whenever you need it, day or night.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mb-20">
+            <h2 className="text-3xl font-bold mb-8 text-white">Why Choose Our AI Assistant?</h2>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="flex items-center space-x-4 bg-gray-800/20 rounded-lg p-4">
+                <div className="text-blue-400">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <span className="text-gray-300">Premium AI Models</span>
+              </div>
+              <div className="flex items-center space-x-4 bg-gray-800/20 rounded-lg p-4">
+                <div className="text-purple-400">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <span className="text-gray-300">Versatile Assistant</span>
+              </div>
+              <div className="flex items-center space-x-4 bg-gray-800/20 rounded-lg p-4">
+                <div className="text-indigo-400">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <span className="text-gray-300">No Limits</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-2xl p-12 text-center max-w-3xl mx-auto backdrop-blur-sm border border-gray-700/50">
+            <h2 className="text-3xl font-bold mb-6 text-white">Premium Plan</h2>
+            <div className="text-5xl font-bold mb-6">
+              <span className="text-white">$10</span>
+              <span className="text-gray-400 text-2xl">/month</span>
+            </div>
+            <p className="text-gray-300 mb-8">Everything you need for AI-powered productivity</p>
+            <a
+              href="/subscribe"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              Get Started Now
+            </a>
           </div>
         </div>
       </div>
