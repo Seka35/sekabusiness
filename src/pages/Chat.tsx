@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download } from 'lucide-react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download, Plus, Trash2 } from 'lucide-react';
 import { sendMessage, Message } from '../lib/chat';
 import { supabase } from '../lib/supabase';
 import ReactMarkdown from 'react-markdown';
@@ -14,20 +14,27 @@ interface SubscriptionStatus {
   expiryDate: Date | null;
 }
 
+interface ChatHistory {
+  id: string;
+  title: string;
+  last_message: string;
+  created_at: string;
+}
+
 const AVAILABLE_MODELS = [
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
-  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3' },
+  { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' },
   { id: 'google/gemini-2.5-pro-exp-03-25:free', name: 'Gemini Pro 2.5' },
   { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'Mistral Small 3.1' },
+  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3' },
   { id: 'qwen/qwen2.5-vl-72b-instruct:free', name: 'Qwen2.5 VL' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3' },
   { id: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', name: 'Dolphin 3.0 R1' },
   { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3' },
   { id: 'open-r1/olympiccoder-32b:free', name: 'OlympicCoder' },
   { id: 'openchat/openchat-7b:free', name: 'OpenChat 3.5' },
   { id: 'rekaai/reka-flash-3:free', name: 'Reka Flash 3' },
   { id: 'gryphe/mythomax-l2-13b:free', name: 'MythoMax' },
-  { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' }
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini' }
 ] as const;
 
 const Chat: React.FC = () => {
@@ -35,7 +42,7 @@ const Chat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('gpt-4o-mini');
+  const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('meta-llama/llama-3.3-70b-instruct:free');
   const [chatId, setChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
@@ -44,6 +51,8 @@ const Chat: React.FC = () => {
   });
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -137,6 +146,106 @@ const Chat: React.FC = () => {
     checkSubscriptionStatus();
   }, [navigate]);
 
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: chats, error } = await supabase
+          .from('chat_history')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error loading chat history:', error);
+          return;
+        }
+
+        if (chats) {
+          const formattedChats = chats.map(chat => ({
+            id: chat.id,
+            title: getFirstMessage(chat.messages) || 'New Chat',
+            last_message: getLastMessage(chat.messages) || 'No messages yet',
+            created_at: chat.created_at
+          }));
+          setChatHistory(formattedChats);
+        }
+      }
+    };
+
+    loadChatHistory();
+  }, []);
+
+  const getFirstMessage = (messages: string): string => {
+    try {
+      const parsedMessages = JSON.parse(messages);
+      if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+        const firstUserMessage = parsedMessages.find(m => m.role === 'user');
+        if (firstUserMessage) {
+          const content = firstUserMessage.content.slice(0, 30);
+          return content + (content.length > 30 ? '...' : '');
+        }
+      }
+    } catch (e) {}
+    return 'New Chat';
+  };
+
+  const getLastMessage = (messages: string): string => {
+    try {
+      const parsedMessages = JSON.parse(messages);
+      if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+        const lastMessage = parsedMessages[parsedMessages.length - 1];
+        const content = lastMessage.content.slice(0, 50);
+        return content + (content.length > 50 ? '...' : '');
+      }
+    } catch (e) {}
+    return 'No messages yet';
+  };
+
+  const handleNewChat = () => {
+    // Réinitialiser les messages
+    setMessages([]);
+    // Créer un nouvel ID
+    const newChatId = uuidv4();
+    // Ajouter le nouveau chat à l'historique
+    setChatHistory(prev => [{
+      id: newChatId,
+      title: 'New Chat',
+      last_message: 'No messages yet',
+      created_at: new Date().toISOString()
+    }, ...prev]);
+    // Mettre à jour l'ID du chat actuel
+    setChatId(newChatId);
+    // Naviguer vers le nouveau chat
+    navigate(`/chat/${newChatId}`);
+  };
+
+  const handleDeleteChat = async (chatIdToDelete: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this conversation?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_history')
+        .delete()
+        .eq('id', chatIdToDelete);
+
+      if (error) throw error;
+
+      setChatHistory(prev => prev.filter(chat => chat.id !== chatIdToDelete));
+      if (chatId === chatIdToDelete) {
+        // Si on supprime le chat actuel, créer un nouveau chat
+        handleNewChat();
+      }
+      toast.success('Chat deleted successfully');
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat');
+    }
+  };
+
   const saveChatHistory = async (updatedMessages: Message[]) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && chatId) {
@@ -175,6 +284,32 @@ const Chat: React.FC = () => {
         const finalMessages = [...updatedMessages, assistantMessage];
         setMessages(finalMessages);
         await saveChatHistory(finalMessages);
+
+        // Update chat history
+        setChatHistory(prev => {
+          const updatedHistory = prev.map(chat => {
+            if (chat.id === chatId) {
+              return {
+                ...chat,
+                title: getFirstMessage(JSON.stringify(finalMessages)),
+                last_message: getLastMessage(JSON.stringify(finalMessages))
+              };
+            }
+            return chat;
+          });
+
+          // If this is a new chat, add it to the history
+          if (!prev.find(chat => chat.id === chatId)) {
+            return [{
+              id: chatId,
+              title: getFirstMessage(JSON.stringify(finalMessages)),
+              last_message: getLastMessage(JSON.stringify(finalMessages)),
+              created_at: new Date().toISOString()
+            }, ...updatedHistory];
+          }
+
+          return updatedHistory;
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -340,99 +475,143 @@ const Chat: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 mt-20">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-            AI Chat Assistant
-          </h1>
-          <div className="flex items-center gap-4">
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as typeof selectedModel)}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {AVAILABLE_MODELS.map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={downloadChatHistory}
-              className="flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-            >
-              <Download className="w-5 h-5 mr-2" />
-              Export Chat
-            </button>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-4 h-[60vh] overflow-y-auto">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}
-            >
-              <div
-                className={`inline-block max-w-[80%] p-4 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-200'
+      <div className="flex gap-6 max-w-[2000px] mx-auto">
+        {/* Sidebar */}
+        <div className={`w-80 bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 h-[80vh] flex flex-col ${isSidebarOpen ? '' : 'hidden'}`}>
+          <button
+            onClick={handleNewChat}
+            className="w-full mb-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+            New Chat
+          </button>
+          
+          <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            {chatHistory.map((chat) => (
+              <Link
+                key={chat.id}
+                to={`/chat/${chat.id}`}
+                className={`block p-3 rounded-lg transition-colors ${
+                  chatId === chat.id
+                    ? 'bg-blue-600/20 border border-blue-500/50'
+                    : 'hover:bg-gray-700/50'
                 }`}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-sm opacity-75">
-                    {message.timestamp && new Date(message.timestamp).toLocaleTimeString()}
-                  </span>
-                  {message.role === 'assistant' && (
-                    <button
-                      onClick={() => copyToClipboard(message.content)}
-                      className="ml-2 p-1 hover:bg-gray-600 rounded"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  )}
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-white mb-1 truncate">{chat.title}</h3>
+                    <p className="text-sm text-gray-400 truncate">{chat.last_message}</p>
+                  </div>
+                  <button
+                    onClick={(e) => handleDeleteChat(chat.id, e)}
+                    className="p-1 hover:bg-red-500/20 rounded text-red-400 ml-2 shrink-0"
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="prose prose-invert max-w-none">
-                  <MessageContent content={message.content} />
-                </div>
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="flex items-center text-gray-400 mb-4">
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              AI is typing...
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+              </Link>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex gap-4">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            placeholder="Type your message... (Shift + Enter for new line)"
-            className="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isTyping}
-            className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 ${
-              !input.trim() || isTyping
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-            }`}
-          >
-            {isTyping ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-            Send
-          </button>
+
+        {/* Main Chat Area */}
+        <div className="flex-1 max-w-4xl flex flex-col">
+          <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              AI Chat Assistant
+            </h1>
+            <div className="flex items-center gap-4 flex-wrap">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value as typeof selectedModel)}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px]"
+              >
+                {AVAILABLE_MODELS.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={downloadChatHistory}
+                className="flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors whitespace-nowrap"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                Export Chat
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-4 h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="max-w-full">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}
+                >
+                  <div
+                    className={`inline-block max-w-[80%] p-4 rounded-lg ${
+                      message.role === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <span className="text-sm opacity-75 whitespace-nowrap">
+                        {message.timestamp && new Date(message.timestamp).toLocaleTimeString()}
+                      </span>
+                      {message.role === 'assistant' && (
+                        <button
+                          onClick={() => copyToClipboard(message.content)}
+                          className="ml-2 p-1 hover:bg-gray-600 rounded shrink-0"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="prose prose-invert max-w-none break-words">
+                      <MessageContent content={message.content} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex items-center text-gray-400 mb-4">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  AI is typing...
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+          
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+              placeholder="Type your message... (Shift + Enter for new line)"
+              className="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 min-w-0"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isTyping}
+              className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
+                !input.trim() || isTyping
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+              }`}
+            >
+              {isTyping ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+              Send
+            </button>
+          </div>
         </div>
       </div>
     </div>
