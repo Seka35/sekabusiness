@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tool, Prompt, BlogPost } from '../types';
-import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code } from 'lucide-react';
+import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code, Users as UsersIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
 import { Session } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import TextEditor from '../components/TextEditor';
+import ChatHistory from '../components/ChatHistory';
 
 interface Category {
   id: string;
@@ -14,10 +15,32 @@ interface Category {
   slug: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  subscription_status: 'active' | 'inactive' | 'cancelled';
+  last_login: string | null;
+}
+
+interface ChatMessage {
+  id: string;
+  user_id: string;
+  messages: string;
+  created_at: string;
+  email: string;
+}
+
+interface ParsedMessage {
+  role: string;
+  content: string;
+  timestamp: string;
+}
+
 const Admin: React.FC = () => {
   const { t } = useTranslation();
   const [session, setSession] = useState<Session | null>(null);
-  const [activeTab, setActiveTab] = useState<'tools' | 'prompts' | 'blog'>('tools');
+  const [activeTab, setActiveTab] = useState<'tools' | 'prompts' | 'blog' | 'users' | 'chat'>('tools');
   const [tools, setTools] = useState<Tool[]>([]);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -66,6 +89,13 @@ const Admin: React.FC = () => {
     excerpt: '',
   });
 
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<ChatMessage | null>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -85,6 +115,18 @@ const Admin: React.FC = () => {
       fetchData();
     }
   }, [session]);
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      fetchChatHistory();
+    }
+  }, [activeTab]);
 
   const fetchData = async () => {
     // Fetch categories
@@ -122,6 +164,74 @@ const Admin: React.FC = () => {
     if (postsData) {
       setPosts(postsData);
       setFilteredPosts(postsData);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      console.log('Fetching users...');
+      const { data: subscriptions, error } = await supabase
+        .from('subscriptions')
+        .select('user_id, email, status, created_at, current_period_end');
+
+      console.log('Subscriptions data:', subscriptions);
+      console.log('Error:', error);
+
+      if (error) throw error;
+
+      // Transform the data to match our User interface
+      const users: User[] = subscriptions.map(sub => ({
+        id: sub.user_id,
+        email: sub.email,
+        created_at: sub.created_at,
+        last_login: null,
+        subscription_status: sub.status as 'active' | 'inactive' | 'cancelled'
+      }));
+
+      console.log('Transformed users:', users);
+      setUsers(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const fetchChatHistory = async () => {
+    setIsLoadingChat(true);
+    try {
+      // First get all chat messages
+      const { data: chats, error: chatError } = await supabase
+        .from('chat_history')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (chatError) throw chatError;
+
+      // Then get all subscriptions to map emails
+      const { data: subscriptions, error: subError } = await supabase
+        .from('subscriptions')
+        .select('user_id, email');
+
+      if (subError) throw subError;
+
+      // Combine the data
+      const formattedChats: ChatMessage[] = chats.map(chat => ({
+        id: chat.id,
+        user_id: chat.user_id,
+        messages: chat.messages,
+        created_at: chat.created_at,
+        email: subscriptions.find(sub => sub.user_id === chat.user_id)?.email || 'Unknown'
+      }));
+
+      setChatHistory(formattedChats);
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      toast.error('Failed to load chat history');
+    } finally {
+      setIsLoadingChat(false);
     }
   };
 
@@ -409,6 +519,80 @@ const Admin: React.FC = () => {
     setShowCodeModal(false);
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      setUsers(users.filter(user => user.id !== userId));
+      toast.success('User deleted successfully');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
+    }
+  };
+
+  const toggleUserStatus = async (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ status: newStatus })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, subscription_status: newStatus as 'active' | 'inactive' | 'cancelled' }
+          : user
+      ));
+      toast.success(`User status updated to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const parseMessages = (messagesStr: string): ParsedMessage[] => {
+    try {
+      return JSON.parse(messagesStr);
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const getLastMessage = (messagesStr: string): string => {
+    const messages = parseMessages(messagesStr);
+    const lastMessage = messages[messages.length - 1];
+    return lastMessage?.content?.slice(0, 100) + '...' || 'No message content';
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    if (!confirm('Are you sure you want to delete this conversation?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_history')
+        .delete()
+        .eq('id', chatId);
+
+      if (error) throw error;
+      
+      setChatHistory(chatHistory.filter(chat => chat.id !== chatId));
+      toast.success('Conversation deleted successfully');
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast.error('Failed to delete conversation');
+    }
+  };
+
   if (!session) {
     return (
       <div className="max-w-md mx-auto mt-20">
@@ -479,6 +663,26 @@ const Admin: React.FC = () => {
           }`}
         >
           Blog
+        </button>
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 rounded ${
+            activeTab === 'users'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          Users
+        </button>
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`px-4 py-2 rounded ${
+            activeTab === 'chat'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          Chat History
         </button>
       </div>
 
@@ -954,6 +1158,93 @@ const Admin: React.FC = () => {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Users Management */}
+        {activeTab === 'users' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold flex items-center">
+                <UsersIcon className="w-6 h-6 mr-2" />
+                User Management
+              </h2>
+            </div>
+
+            {isLoadingUsers ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left border-b border-gray-700">
+                      <th className="pb-3 px-4">Email</th>
+                      <th className="pb-3 px-4">Status</th>
+                      <th className="pb-3 px-4">Created At</th>
+                      <th className="pb-3 px-4">Last Login</th>
+                      <th className="pb-3 px-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user.id} className="border-b border-gray-700">
+                        <td className="py-4 px-4">{user.email}</td>
+                        <td className="py-4 px-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            user.subscription_status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.subscription_status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 px-4">
+                          {user.last_login 
+                            ? new Date(user.last_login).toLocaleDateString()
+                            : 'Never'
+                          }
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => toggleUserStatus(user.id, user.subscription_status)}
+                              className="p-1 hover:bg-gray-700 rounded"
+                              title={user.subscription_status === 'active' ? 'Deactivate' : 'Activate'}
+                            >
+                              {user.subscription_status === 'active' 
+                                ? <ToggleRight className="w-5 h-5 text-green-500" />
+                                : <ToggleLeft className="w-5 h-5 text-red-500" />
+                              }
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="p-1 hover:bg-gray-700 rounded text-red-500"
+                              title="Delete user"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Chat History Management */}
+        {activeTab === 'chat' && (
+          <ChatHistory
+            chatHistory={chatHistory}
+            setChatHistory={setChatHistory}
+            isLoading={isLoadingChat}
+          />
         )}
       </div>
 
