@@ -13,11 +13,28 @@ interface SubscriptionStatus {
   expiryDate: Date | null;
 }
 
+const AVAILABLE_MODELS = [
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3' },
+  { id: 'google/gemini-2.5-pro-exp-03-25:free', name: 'Gemini Pro 2.5' },
+  { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'Mistral Small 3.1' },
+  { id: 'qwen/qwen2.5-vl-72b-instruct:free', name: 'Qwen2.5 VL' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3' },
+  { id: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', name: 'Dolphin 3.0 R1' },
+  { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3' },
+  { id: 'open-r1/olympiccoder-32b:free', name: 'OlympicCoder' },
+  { id: 'openchat/openchat-7b:free', name: 'OpenChat 3.5' },
+  { id: 'rekaai/reka-flash-3:free', name: 'Reka Flash 3' },
+  { id: 'gryphe/mythomax-l2-13b:free', name: 'MythoMax' },
+  { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' }
+] as const;
+
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('gpt-4o-mini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isSubscribed: false,
@@ -132,7 +149,7 @@ const Chat: React.FC = () => {
       setInput('');
       setIsTyping(true);
 
-      const response = await sendMessage(updatedMessages);
+      const response = await sendMessage(updatedMessages, selectedModel);
       if (response) {
         const assistantMessage: Message = {
           content: response,
@@ -267,13 +284,26 @@ const Chat: React.FC = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
             AI Chat Assistant
           </h1>
-          <button
-            onClick={downloadChatHistory}
-            className="flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-          >
-            <Download className="w-5 h-5 mr-2" />
-            Export Chat
-          </button>
+          <div className="flex items-center gap-4">
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value as typeof selectedModel)}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {AVAILABLE_MODELS.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={downloadChatHistory}
+              className="flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+            >
+              <Download className="w-5 h-5 mr-2" />
+              Export Chat
+            </button>
+          </div>
         </div>
         
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 mb-4 h-[60vh] overflow-y-auto">

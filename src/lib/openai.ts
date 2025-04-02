@@ -8,17 +8,17 @@ async function getOpenAIKey(): Promise<string> {
   const { data, error } = await supabase
     .from('api_keys')
     .select('key_value')
-    .eq('key_name', 'openai_api_key')
+    .eq('key_name', 'openrouter_api_key')
     .single();
 
   if (error) {
     console.error('Error fetching API key:', error);
-    throw new Error('Failed to fetch OpenAI API key');
+    throw new Error('Failed to fetch OpenRouter API key');
   }
 
   if (!data?.key_value) {
     console.error('API key is null or undefined in database');
-    throw new Error('OpenAI API key not found in database');
+    throw new Error('OpenRouter API key not found in database');
   }
 
   console.log('Successfully retrieved API key from database');
@@ -32,6 +32,11 @@ export async function getOpenAIInstance(): Promise<OpenAI> {
       const apiKey = await getOpenAIKey();
       openaiInstance = new OpenAI({
         apiKey: apiKey,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          "HTTP-Referer": "https://seka.business",
+          "X-Title": "Seka Business"
+        },
         dangerouslyAllowBrowser: true
       });
       console.log('OpenAI instance created successfully');
@@ -43,11 +48,11 @@ export async function getOpenAIInstance(): Promise<OpenAI> {
   return openaiInstance;
 }
 
-export async function generateChatCompletion(messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }>) {
+export async function generateChatCompletion(messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }>, model: string) {
   try {
     const openai = await getOpenAIInstance();
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model,
       messages: messages,
       temperature: 0.7,
       max_tokens: 1000,

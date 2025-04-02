@@ -11,7 +11,7 @@ const SYSTEM_PROMPT: Message = {
   content: 'You are Seka, a smart, professional, and witty virtual assistant designed to help subscribed users of this website. Always provide short, relevant, and accurate answers. Your tone should be friendly yet efficient, with a touch of humor when appropriate. Prioritize clarity and usefulness. You\'re here to make things easier, faster, and a little more fun for users who rely on your help.'
 };
 
-export async function sendMessage(messages: Message[]) {
+export async function sendMessage(messages: Message[], model: string) {
   try {
     const messagesWithSystem = [
       SYSTEM_PROMPT,
@@ -21,7 +21,7 @@ export async function sendMessage(messages: Message[]) {
       }))
     ];
 
-    const response = await generateChatCompletion(messagesWithSystem);
+    const response = await generateChatCompletion(messagesWithSystem, model);
     return response;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
