@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download, Plus, Trash2, History } from 'lucide-react';
+import { MessageSquare, CreditCard, Zap, Shield, Clock, Send, Copy, Check, Loader2, Download, Plus, Trash2, History, ChevronDown } from 'lucide-react';
 import { sendMessage, Message } from '../lib/chat';
 import { supabase } from '../lib/supabase';
 import ReactMarkdown from 'react-markdown';
@@ -8,6 +8,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { Prompt } from '../types';
 
 interface SubscriptionStatus {
   isSubscribed: boolean;
@@ -53,6 +54,11 @@ const Chat: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [isPromptsOpen, setIsPromptsOpen] = useState(false);
+  const [searchPrompt, setSearchPrompt] = useState('');
+  const promptsRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -174,6 +180,39 @@ const Chat: React.FC = () => {
     };
 
     loadChatHistory();
+  }, []);
+
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      const { data, error } = await supabase
+        .from('prompts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching prompts:', error);
+        return;
+      }
+
+      if (data) {
+        setPrompts(data);
+      }
+    };
+
+    fetchPrompts();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (promptsRef.current && !promptsRef.current.contains(event.target as Node)) {
+        setIsPromptsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const getFirstMessage = (messages: string): string => {
@@ -386,6 +425,30 @@ const Chat: React.FC = () => {
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const filteredPrompts = prompts.filter(prompt =>
+    prompt.title.toLowerCase().includes(searchPrompt.toLowerCase()) ||
+    prompt.description.toLowerCase().includes(searchPrompt.toLowerCase()) ||
+    prompt.tool.toLowerCase().includes(searchPrompt.toLowerCase())
+  );
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
+  const handlePromptSelect = (promptText: string) => {
+    setInput(promptText);
+    setIsPromptsOpen(false);
+    setTimeout(adjustTextareaHeight, 0);
+  };
 
   if (isLoading) {
     return (
@@ -620,31 +683,92 @@ const Chat: React.FC = () => {
           
           {/* Zone de saisie */}
           <div className="sticky bottom-0 pt-4 pb-6">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                placeholder="Type your message... (Shift + Enter for new line)"
-                className="flex-1 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm text-blue-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700/50 min-w-0"
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isTyping}
-                className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
-                  !input.trim() || isTyping
-                    ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600/90 to-purple-600/90 hover:from-blue-700/90 hover:to-purple-700/90 text-white'
-                }`}
-              >
-                {isTyping ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
+            <div className="flex flex-col gap-4">
+              <div className="relative" ref={promptsRef}>
+                <button
+                  onClick={() => setIsPromptsOpen(!isPromptsOpen)}
+                  className="w-full px-4 py-2 text-left bg-gray-800/50 hover:bg-gray-700/50 rounded-lg flex items-center justify-between"
+                >
+                  <span className="text-gray-400">Select a prompt template</span>
+                  <ChevronDown className={`w-5 h-5 transition-transform ${isPromptsOpen ? 'transform rotate-180' : ''}`} />
+                </button>
+
+                {isPromptsOpen && (
+                  <div className="absolute bottom-full mb-2 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 max-h-96 overflow-y-auto custom-scrollbar"
+                    style={{
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: 'rgba(59, 130, 246, 0.5) rgba(17, 24, 39, 0.1)'
+                    }}
+                  >
+                    <div className="p-2 sticky top-0 bg-gray-800 border-b border-gray-700">
+                      <input
+                        type="text"
+                        value={searchPrompt}
+                        onChange={(e) => setSearchPrompt(e.target.value)}
+                        placeholder="Search prompts..."
+                        className="w-full px-3 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="p-2">
+                      {filteredPrompts.map((prompt) => (
+                        <button
+                          key={prompt.id}
+                          onClick={() => handlePromptSelect(prompt.prompt_text)}
+                          className="w-full text-left p-3 hover:bg-gray-700 rounded-lg mb-2 last:mb-0"
+                        >
+                          <div className="font-medium text-blue-400">{prompt.title}</div>
+                          <div className="text-sm text-gray-400">{prompt.description}</div>
+                          <div className="text-xs text-gray-500 mt-1">{prompt.tool}</div>
+                        </button>
+                      ))}
+                      {filteredPrompts.length === 0 && (
+                        <div className="text-center text-gray-400 py-4">
+                          No prompts found
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
-                Send
-              </button>
+              </div>
+
+              <div className="flex gap-4">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type your message... (Shift + Enter for new line)"
+                  className="flex-1 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm text-blue-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700/50 min-w-0 resize-none custom-scrollbar overflow-y-auto"
+                  style={{
+                    minHeight: '48px',
+                    maxHeight: '300px',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(59, 130, 246, 0.5) rgba(17, 24, 39, 0.1)'
+                  }}
+                  rows={1}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isTyping}
+                  className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
+                    !input.trim() || isTyping
+                      ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-600/90 to-purple-600/90 hover:from-blue-700/90 hover:to-purple-700/90 text-white'
+                  }`}
+                >
+                  {isTyping ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                  Send
+                </button>
+              </div>
             </div>
           </div>
         </div>
