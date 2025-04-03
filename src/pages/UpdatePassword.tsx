@@ -10,16 +10,22 @@ const UpdatePassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Récupérer et appliquer le token d'accès depuis l'URL
   useEffect(() => {
-    const hash = window.location.hash;
-    const accessToken = new URLSearchParams(hash.substring(hash.indexOf('?'))).get('access_token');
-    
-    if (accessToken) {
-      // Définir la session avec le token
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: '',
+    // Récupérer le type et le token depuis l'URL
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const type = params.get('type');
+    const accessToken = params.get('access_token');
+
+    if (type === 'recovery' && accessToken) {
+      // Établir la session avec le token de récupération
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          // Si pas de session, on initialise avec le token
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: '',
+          }).catch(console.error);
+        }
       });
     }
   }, []);
@@ -39,20 +45,26 @@ const UpdatePassword: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.updateUser({
+      
+      // Mettre à jour le mot de passe
+      const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) throw error;
 
       toast.success('Mot de passe mis à jour avec succès');
-      // Rediriger vers la page de login après une mise à jour réussie
+      
+      // Se déconnecter après la mise à jour
+      await supabase.auth.signOut();
+      
+      // Rediriger vers la page de login
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (error: any) {
       console.error('Error updating password:', error);
-      toast.error(error.message || 'Erreur lors de la mise à jour du mot de passe');
+      toast.error('Erreur lors de la mise à jour du mot de passe. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
