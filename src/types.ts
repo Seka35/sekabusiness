@@ -12,6 +12,24 @@ export interface ChatHistory {
   messages?: Message[];
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  description: string;
+  image_url?: string;
+  category_id: string;
+  subcategory?: string;
+  created_at?: string;
+  updated_at?: string;
+  published?: boolean;
+  slug: string;
+  categories?: {
+    name: string;
+    slug: string;
+  };
+}
+
 export interface Prompt {
   id: string;
   title: string;
