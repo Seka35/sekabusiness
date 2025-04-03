@@ -26,8 +26,10 @@ export interface BlogPost {
   published?: boolean;
   slug: string;
   categories?: {
+    id: string;
     name: string;
     slug: string;
+    description?: string;
   };
 }
 
@@ -64,4 +66,27 @@ export interface Category {
   description: string;
   created_at?: string;
   slug?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  subscription_status: 'active' | 'inactive' | 'cancelled';
+  last_login: string | null;
+  current_period_end?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  messages: string;
+  created_at: string;
+  email: string;
+}
+
+export interface ParsedMessage {
+  role: string;
+  content: string;
+  timestamp: string;
 } 

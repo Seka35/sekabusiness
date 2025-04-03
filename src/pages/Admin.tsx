@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tool, Prompt, BlogPost, Category } from '../types';
+import { Tool, Prompt, BlogPost, Category, User, ChatMessage, ParsedMessage } from '../types';
 import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code, Users as UsersIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
@@ -8,28 +8,6 @@ import { Session } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import TextEditor from '../components/TextEditor';
 import ChatHistory from '../components/ChatHistory';
-
-interface User {
-  id: string;
-  email: string;
-  created_at: string;
-  subscription_status: 'active' | 'inactive' | 'cancelled';
-  last_login: string | null;
-}
-
-interface ChatMessage {
-  id: string;
-  user_id: string;
-  messages: string;
-  created_at: string;
-  email: string;
-}
-
-interface ParsedMessage {
-  role: string;
-  content: string;
-  timestamp: string;
-}
 
 const Admin: React.FC = () => {
   const { t } = useTranslation();
@@ -585,6 +563,11 @@ const Admin: React.FC = () => {
       console.error('Error deleting conversation:', error);
       toast.error('Failed to delete conversation');
     }
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (!session) {
@@ -1144,7 +1127,7 @@ const Admin: React.FC = () => {
                         </p>
                       </div>
                       <div className="mt-4 text-sm text-gray-500">
-                        Last updated: {new Date(post.updated_at).toLocaleDateString()}
+                        Last updated: {formatDate(post.updated_at)}
                       </div>
                     </div>
                   </div>
@@ -1194,13 +1177,10 @@ const Admin: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-4 px-4">
-                          {new Date(user.created_at).toLocaleDateString()}
+                          {formatDate(user.created_at)}
                         </td>
                         <td className="py-4 px-4">
-                          {user.last_login 
-                            ? new Date(user.last_login).toLocaleDateString()
-                            : 'Never'
-                          }
+                          {formatDate(user.last_login)}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex space-x-2">
