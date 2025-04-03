@@ -11,17 +11,16 @@ const UpdatePassword: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Écouter les changements d'état d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // L'utilisateur arrive depuis le lien de réinitialisation
-        console.log("Password recovery event detected");
-      }
-    });
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+    }
   }, []);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -40,6 +39,12 @@ const UpdatePassword: React.FC = () => {
     try {
       setIsLoading(true);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Session non trouvée');
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -47,6 +52,9 @@ const UpdatePassword: React.FC = () => {
       if (error) throw error;
 
       toast.success('Mot de passe mis à jour avec succès');
+      
+      // Se déconnecter après la mise à jour du mot de passe
+      await supabase.auth.signOut();
       
       // Rediriger vers la page de login après un court délai
       setTimeout(() => {
