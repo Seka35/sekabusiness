@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { DivideIcon as LucideIcon, Menu, X, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import UserAvatar from './UserAvatar';
 
 interface NavItem {
   name: string;
@@ -147,6 +148,24 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               
+              // Si c'est le lien du Dashboard, afficher l'avatar à la place de l'icône
+              if (item.name === 'Dashboard') {
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <UserAvatar className="w-5 h-5 mr-2" />
+                    {item.name}
+                  </Link>
+                );
+              }
+              
               return (
                 <Link
                   key={item.name}
@@ -197,6 +216,25 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
               {filteredItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
+
+                // Si c'est le lien du Dashboard dans le menu mobile, afficher l'avatar
+                if (item.name === 'Dashboard') {
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.path}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      <UserAvatar className="w-5 h-5 mr-2" />
+                      {item.name}
+                    </Link>
+                  );
+                }
 
                 return (
                   <Link
