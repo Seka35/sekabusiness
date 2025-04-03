@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import { Monitor, BookOpen, MessageSquare, User } from 'lucide-react';
 import AdminRoute from './components/AdminRoute';
+import UpdatePassword from './pages/UpdatePassword';
 
 function App() {
   const navItems = [
@@ -43,6 +44,7 @@ function App() {
             <Route path="/subscribe" element={<Subscribe />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
           </Routes>
         </main>
         <Toaster position="bottom-right" />

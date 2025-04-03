@@ -9,6 +9,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { Prompt } from '../types';
+import { generateTitle } from '../lib/api';
 
 interface SubscriptionStatus {
   isSubscribed: boolean;
@@ -170,8 +171,8 @@ const Chat: React.FC = () => {
         if (chats) {
           const formattedChats = chats.map(chat => ({
             id: chat.id,
-            title: getFirstMessage(chat.messages) || 'New Chat',
-            last_message: getLastMessage(chat.messages) || 'No messages yet',
+            title: chat.title || getFirstMessage(chat.messages) || 'Nouvelle conversation',
+            last_message: getLastMessage(chat.messages) || 'Pas de messages',
             created_at: chat.created_at
           }));
           setChatHistory(formattedChats);
@@ -217,28 +218,52 @@ const Chat: React.FC = () => {
 
   const getFirstMessage = (messages: string): string => {
     try {
-      const parsedMessages = JSON.parse(messages);
-      if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-        const firstUserMessage = parsedMessages.find(m => m.role === 'user');
-        if (firstUserMessage) {
-          const content = firstUserMessage.content.slice(0, 30);
-          return content + (content.length > 30 ? '...' : '');
+      // Vérifier si le message commence par [{ pour un tableau JSON
+      if (messages.trim().startsWith('[{')) {
+        const parsedMessages = JSON.parse(messages);
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          const firstUserMessage = parsedMessages.find(m => m.role === 'user');
+          if (firstUserMessage) {
+            const content = firstUserMessage.content.slice(0, 30);
+            return content + (content.length > 30 ? '...' : '');
+          }
         }
       }
-    } catch (e) {}
-    return 'New Chat';
+      
+      // Si ce n'est pas un tableau JSON, essayer d'extraire le contenu directement
+      const contentMatch = messages.match(/\"content\":\"([^\"]+)\"/);
+      if (contentMatch && contentMatch[1]) {
+        const content = contentMatch[1].slice(0, 30);
+        return content + (content.length > 30 ? '...' : '');
+      }
+    } catch (e) {
+      console.error('Error parsing message:', e);
+    }
+    return 'Nouvelle conversation';
   };
 
   const getLastMessage = (messages: string): string => {
     try {
-      const parsedMessages = JSON.parse(messages);
-      if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-        const lastMessage = parsedMessages[parsedMessages.length - 1];
-        const content = lastMessage.content.slice(0, 50);
+      // Vérifier si le message commence par [{ pour un tableau JSON
+      if (messages.trim().startsWith('[{')) {
+        const parsedMessages = JSON.parse(messages);
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          const lastMessage = parsedMessages[parsedMessages.length - 1];
+          const content = lastMessage.content.slice(0, 50);
+          return content + (content.length > 50 ? '...' : '');
+        }
+      }
+      
+      // Si ce n'est pas un tableau JSON, essayer d'extraire le contenu directement
+      const contentMatch = messages.match(/\"content\":\"([^\"]+)\"/);
+      if (contentMatch && contentMatch[1]) {
+        const content = contentMatch[1].slice(0, 50);
         return content + (content.length > 50 ? '...' : '');
       }
-    } catch (e) {}
-    return 'No messages yet';
+    } catch (e) {
+      console.error('Error parsing message:', e);
+    }
+    return 'Pas de message';
   };
 
   const handleNewChat = () => {
@@ -285,15 +310,17 @@ const Chat: React.FC = () => {
     }
   };
 
-  const saveChatHistory = async (updatedMessages: Message[]) => {
+  const saveChatHistory = async (updatedMessages: Message[], generatedTitle?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user && chatId) {
+      const title = generatedTitle || await generateTitle(updatedMessages);
       await supabase
         .from('chat_history')
         .upsert({ 
           id: chatId,
           user_id: session.user.id, 
-          messages: JSON.stringify(updatedMessages)
+          messages: JSON.stringify(updatedMessages),
+          title: title
         });
     }
   };
@@ -322,26 +349,30 @@ const Chat: React.FC = () => {
         };
         const finalMessages = [...updatedMessages, assistantMessage];
         setMessages(finalMessages);
-        await saveChatHistory(finalMessages);
 
-        // Update chat history
+        // Générer un titre pour la conversation
+        const title = await generateTitle(finalMessages);
+        
+        // Sauvegarder les messages et le titre
+        await saveChatHistory(finalMessages, title);
+
+        // Update chat history with the generated title
         setChatHistory(prev => {
           const updatedHistory = prev.map(chat => {
             if (chat.id === chatId) {
               return {
                 ...chat,
-                title: getFirstMessage(JSON.stringify(finalMessages)),
+                title: title,
                 last_message: getLastMessage(JSON.stringify(finalMessages))
               };
             }
             return chat;
           });
 
-          // If this is a new chat, add it to the history
           if (!prev.find(chat => chat.id === chatId)) {
             return [{
               id: chatId,
-              title: getFirstMessage(JSON.stringify(finalMessages)),
+              title: title,
               last_message: getLastMessage(JSON.stringify(finalMessages)),
               created_at: new Date().toISOString()
             }, ...updatedHistory];

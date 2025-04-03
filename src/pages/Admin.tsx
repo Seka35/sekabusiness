@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tool, Prompt, BlogPost } from '../types';
+import { Tool, Prompt, BlogPost, Category } from '../types';
 import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code, Users as UsersIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
@@ -8,12 +8,6 @@ import { Session } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import TextEditor from '../components/TextEditor';
 import ChatHistory from '../components/ChatHistory';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
 
 interface User {
   id: string;
