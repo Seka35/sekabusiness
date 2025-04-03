@@ -22,18 +22,17 @@ interface ChatHistory {
 }
 
 const AVAILABLE_MODELS = [
+  { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'Mistral Small 3.1' },
+  { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3' },
+  { id: 'gryphe/mythomax-l2-13b:free', name: 'MythoMax' },
+  { id: 'rekaai/reka-flash-3:free', name: 'Reka Flash 3' },
+  { id: 'openchat/openchat-7b:free', name: 'OpenChat 3.5' },
+  { id: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', name: 'Dolphin 3.0 R1' },
+  { id: 'open-r1/olympiccoder-32b:free', name: 'OlympicCoder' },
+  { id: 'qwen/qwen2.5-vl-72b-instruct:free', name: 'Qwen2.5 VL' },
+  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3' },
   { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3' },
   { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet' },
-  { id: 'google/gemini-2.5-pro-exp-03-25:free', name: 'Gemini Pro 2.5' },
-  { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'Mistral Small 3.1' },
-  { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'DeepSeek V3' },
-  { id: 'qwen/qwen2.5-vl-72b-instruct:free', name: 'Qwen2.5 VL' },
-  { id: 'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', name: 'Dolphin 3.0 R1' },
-  { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3' },
-  { id: 'open-r1/olympiccoder-32b:free', name: 'OlympicCoder' },
-  { id: 'openchat/openchat-7b:free', name: 'OpenChat 3.5' },
-  { id: 'rekaai/reka-flash-3:free', name: 'Reka Flash 3' },
-  { id: 'gryphe/mythomax-l2-13b:free', name: 'MythoMax' },
   { id: 'gpt-4o-mini', name: 'GPT-4o Mini' }
 ] as const;
 
@@ -42,7 +41,7 @@ const Chat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('meta-llama/llama-3.3-70b-instruct:free');
+  const [selectedModel, setSelectedModel] = useState<typeof AVAILABLE_MODELS[number]['id']>('mistralai/mistral-small-3.1-24b-instruct:free');
   const [chatId, setChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
