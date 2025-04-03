@@ -11,6 +11,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +69,32 @@ const Login = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Veuillez entrer votre email');
+      return;
+    }
+
+    try {
+      setIsResetting(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/#/update-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Si un compte existe avec cet email, vous recevrez les instructions de réinitialisation');
+      // Ajouter un délai pour que l'utilisateur puisse lire le message
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setIsResetting(false);
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      toast.error('Une erreur est survenue. Veuillez réessayer plus tard.');
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto p-6">
       <div className="bg-gray-800 rounded-lg shadow-xl p-8">
@@ -114,6 +141,17 @@ const Login = () => {
             <p className="text-sm text-gray-400 mt-1">
               Minimum 6 characters
             </p>
+          </div>
+
+          <div className="flex justify-start items-center text-sm">
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={isResetting || !email}
+              className={`text-blue-400 hover:text-blue-300 transition-colors ${(!email || isResetting) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isResetting ? 'Envoi en cours...' : 'Mot de passe oublié ?'}
+            </button>
           </div>
 
           <button
