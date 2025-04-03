@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tool, Category } from '../types';
-import { ChevronDown, ChevronUp, Share2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Share2, Search, Filter } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import toast from 'react-hot-toast';
 
@@ -12,57 +12,36 @@ const Tools: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTools = async () => {
-      const { data: toolsData, error: toolsError } = await supabase
-        .from('tools')
-        .select(`
-          *,
-          categories (
-            name,
-            slug
-          )
-        `)
-        .order('name');
+      try {
+        const { data: toolsData, error: toolsError } = await supabase
+          .from('tools')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (toolsError) {
-        console.error('Error fetching tools:', toolsError);
-        return;
-      }
+        if (toolsError) throw toolsError;
 
-      if (toolsData) {
-        setTools(toolsData);
-        const toolsByCategory = toolsData.reduce((acc: Record<string, Tool[]>, tool: Tool) => {
-          const categoryId = tool.category_id;
-          if (!acc[categoryId]) {
-            acc[categoryId] = [];
-          }
-          acc[categoryId].push(tool);
-          return acc;
-        }, {});
-        setFilteredTools(toolsByCategory);
-      }
-    };
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name');
 
-    const fetchCategories = async () => {
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+        if (categoriesError) throw categoriesError;
 
-      if (categoriesError) {
-        console.error('Error fetching categories:', categoriesError);
-        return;
-      }
-
-      if (categoriesData) {
-        setCategories(categoriesData);
+        setTools(toolsData || []);
+        setCategories(categoriesData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTools();
-    fetchCategories();
   }, []);
 
   const handleSearch = (query: string) => {
@@ -153,119 +132,127 @@ const Tools: React.FC = () => {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-        AI Tools Directory
-      </h1>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <SearchBar
-              items={tools.map(tool => ({
-                id: tool.id,
-                name: tool.name,
-                description: tool.description,
-                category: tool.categories?.name
-              }))}
-              onSearch={handleSearch}
-              placeholder="Search tools by name, description, or category..."
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">AI Tools Directory</h1>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search tools..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="pl-10 pr-8 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-12">
-        {Object.entries(filteredTools).map(([categoryId, categoryTools]) => {
-          const category = categories.find(c => c.id === categoryId);
-          if (!category || categoryTools.length === 0) return null;
+        <div className="space-y-12">
+          {Object.entries(filteredTools).map(([categoryId, categoryTools]) => {
+            const category = categories.find(c => c.id === categoryId);
+            if (!category || categoryTools.length === 0) return null;
 
-          return (
-            <div key={categoryId} className="space-y-6">
-              <div className="flex items-center space-x-3">
-                <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-                <h2 className="text-2xl font-semibold text-white">{category.name}</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                {categoryTools.map((tool) => (
-                  <div
-                    key={tool.id}
-                    className="group bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300"
-                  >
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start space-x-4">
-                          <img
-                            src={tool.logo_url}
-                            alt={tool.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                          <div>
-                            <h3 className="text-lg font-semibold mb-1">{tool.name}</h3>
+            return (
+              <div key={categoryId} className="space-y-6">
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+                  <h2 className="text-2xl font-semibold text-white">{category.name}</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                  {categoryTools.map((tool) => (
+                    <div
+                      key={tool.id}
+                      className="group bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 hover:border-blue-500/50 transition-all duration-300"
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start space-x-4">
+                            <img
+                              src={tool.logo_url}
+                              alt={tool.name}
+                              className="w-12 h-12 rounded-lg object-cover"
+                            />
+                            <div>
+                              <h3 className="text-lg font-semibold mb-1">{tool.name}</h3>
+                            </div>
                           </div>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getPriceTypeColor(tool.price_type)}`}>
+                            {tool.price_type.charAt(0).toUpperCase() + tool.price_type.slice(1)}
+                          </span>
                         </div>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getPriceTypeColor(tool.price_type)}`}>
-                          {tool.price_type.charAt(0).toUpperCase() + tool.price_type.slice(1)}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 text-sm mb-4">
-                        {expandedDescriptions.has(tool.id)
-                          ? tool.description
-                          : tool.description.length > 100
-                          ? tool.description.substring(0, 100) + '...'
-                          : tool.description}
-                      </p>
-                      {tool.description.length > 100 && (
-                        <button
-                          onClick={() => toggleDescription(tool.id)}
-                          className="text-blue-400 hover:text-blue-300 text-sm flex items-center mt-auto"
-                        >
-                          {expandedDescriptions.has(tool.id) ? (
-                            <>
-                              <ChevronUp className="w-4 h-4 mr-1" />
-                              Show Less
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown className="w-4 h-4 mr-1" />
-                              Show More
-                            </>
-                          )}
-                        </button>
-                      )}
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <a
-                          href={tool.website_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                        >
-                          Visit Website
-                        </a>
+                        <p className="text-gray-300 text-sm mb-4">
+                          {expandedDescriptions.has(tool.id)
+                            ? tool.description
+                            : tool.description.length > 100
+                            ? tool.description.substring(0, 100) + '...'
+                            : tool.description}
+                        </p>
+                        {tool.description.length > 100 && (
+                          <button
+                            onClick={() => toggleDescription(tool.id)}
+                            className="text-blue-400 hover:text-blue-300 text-sm flex items-center mt-auto"
+                          >
+                            {expandedDescriptions.has(tool.id) ? (
+                              <>
+                                <ChevronUp className="w-4 h-4 mr-1" />
+                                Show Less
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4 mr-1" />
+                                Show More
+                              </>
+                            )}
+                          </button>
+                        )}
+                        <div className="mt-4 pt-4 border-t border-gray-700">
+                          <a
+                            href={tool.website_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                          >
+                            Visit Website
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {Object.keys(filteredTools).length === 0 && (
-          <p className="text-gray-400 text-center py-4">No tools found matching your search.</p>
-        )}
+            );
+          })}
+          {Object.keys(filteredTools).length === 0 && (
+            <p className="text-gray-400 text-center py-4">No tools found matching your search.</p>
+          )}
+        </div>
       </div>
     </div>
   );
