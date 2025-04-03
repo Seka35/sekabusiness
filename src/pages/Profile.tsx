@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { UserIcon, CreditCard, XCircle } from 'lucide-react';
+import { UserIcon, CreditCard, XCircle, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SubscriptionStatus {
@@ -16,6 +16,10 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isSubscribed: false,
     expiryDate: null,
@@ -108,6 +112,50 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      // First verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        throw new Error('Current password is incorrect');
+      }
+
+      // Update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) throw updateError;
+
+      toast.success('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -150,7 +198,7 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Subscription Status */}
-          <div className="bg-gray-900 rounded-lg p-6">
+          <div className="bg-gray-900 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="bg-blue-500/10 p-3 rounded-lg mr-4">
@@ -199,6 +247,75 @@ const Profile: React.FC = () => {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Password Change Form */}
+          <div className="bg-gray-900 rounded-lg p-6">
+            <div className="flex items-center mb-6">
+              <div className="bg-blue-500/10 p-3 rounded-lg mr-4">
+                <Lock className="w-6 h-6 text-blue-500" />
+              </div>
+              <h2 className="text-xl font-semibold">Change Password</h2>
+            </div>
+            
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Updating Password...
+                  </>
+                ) : (
+                  'Update Password'
+                )}
+              </button>
+            </form>
           </div>
         </div>
       </div>

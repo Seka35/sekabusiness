@@ -41,24 +41,24 @@ const Subscribe: React.FC = () => {
   const totalValue = aiModels.reduce((acc, model) => acc + model.price, 0);
 
   return (
-    <div className="h-screen w-screen overflow-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900 via-gray-900 to-black">
-      <div className="w-full min-h-screen flex flex-col items-center justify-start py-16 px-4">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900 via-gray-900 to-black overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-16">
         {/* Hero Section */}
-        <div className="w-full max-w-6xl text-center mb-16">
+        <div className="text-center mb-16">
           <div className="inline-block mb-6 px-6 py-2 bg-blue-500/10 rounded-full border border-blue-500/20 backdrop-blur-sm">
             <span className="text-blue-400 font-semibold tracking-wide">PREMIUM AI ACCESS</span>
           </div>
-          <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-400 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-4xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-400 bg-clip-text text-transparent leading-tight">
             All Premium AI Models<br />One Simple Price
           </h1>
-          <p className="text-2xl text-gray-300/90 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300/90 mb-10 max-w-3xl mx-auto leading-relaxed">
             Why pay for multiple subscriptions? Get access to all the latest AI models
             for one fixed price. Save over ${totalValue} monthly!
           </p>
           <button
             onClick={handleSubscribe}
             disabled={isLoading}
-            className="group relative inline-flex items-center justify-center px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full text-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_50px_rgba(66,153,225,0.5)] overflow-hidden"
+            className="group relative inline-flex items-center justify-center px-8 md:px-12 py-4 md:py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full text-lg md:text-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_50px_rgba(66,153,225,0.5)] overflow-hidden"
           >
             <span className="relative z-10 bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">
               {isLoading ? 'Processing...' : 'Start Now - Only $10/month'}
@@ -69,12 +69,12 @@ const Subscribe: React.FC = () => {
         </div>
 
         {/* Value Proposition */}
-        <div className="w-full max-w-6xl bg-gray-900/40 backdrop-blur-xl rounded-3xl p-10 border border-gray-700/50 shadow-[0_0_50px_rgba(0,0,0,0.3)] mb-16">
+        <div className="bg-gray-900/40 backdrop-blur-xl rounded-3xl p-6 md:p-10 border border-gray-700/50 shadow-[0_0_50px_rgba(0,0,0,0.3)] mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Save Over ${totalValue} Monthly</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Save Over ${totalValue} Monthly</h2>
             <p className="text-gray-300 text-lg">Compare with individual subscriptions:</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {aiModels.map((model, index) => {
               const Icon = model.icon;
               return (
@@ -92,8 +92,8 @@ const Subscribe: React.FC = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="w-full max-w-6xl grid md:grid-cols-3 gap-8 mb-16">
-          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16">
+          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
             <div className="h-16 w-16 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500/20 transition-colors duration-300">
               <Brain className="w-8 h-8 text-blue-400 group-hover:text-blue-300" />
             </div>
@@ -104,7 +104,7 @@ const Subscribe: React.FC = () => {
             </p>
           </div>
 
-          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
+          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
             <div className="h-16 w-16 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors duration-300">
               <DollarSign className="w-8 h-8 text-purple-400 group-hover:text-purple-300" />
             </div>
@@ -115,7 +115,7 @@ const Subscribe: React.FC = () => {
             </p>
           </div>
 
-          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
+          <div className="group bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-gray-700/50 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(66,153,225,0.2)]">
             <div className="h-16 w-16 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 transition-colors duration-300">
               <Infinity className="w-8 h-8 text-indigo-400 group-hover:text-indigo-300" />
             </div>
@@ -129,8 +129,8 @@ const Subscribe: React.FC = () => {
 
         {/* Benefits Section */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-12 text-white">Everything You Need</h2>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-white">Everything You Need</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
             {[
               "Access to all premium AI models",
               "Unlimited conversations",
@@ -139,7 +139,7 @@ const Subscribe: React.FC = () => {
               "No usage limits",
               "Regular model updates"
             ].map((benefit, index) => (
-              <div key={index} className="group flex items-center space-x-4 bg-gray-900/40 backdrop-blur-xl rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-colors duration-300">
+              <div key={index} className="group flex items-center space-x-4 bg-gray-900/40 backdrop-blur-xl rounded-xl p-4 md:p-6 border border-gray-700/50 hover:border-blue-500/50 transition-colors duration-300">
                 <div className="text-green-400 group-hover:text-green-300 transition-colors duration-300">
                   <Check className="w-6 h-6" />
                 </div>
@@ -150,22 +150,22 @@ const Subscribe: React.FC = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-gray-900/80 via-gray-800/80 to-gray-900/80 rounded-3xl p-12 text-center max-w-3xl mx-auto backdrop-blur-xl border border-gray-700/50 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
+        <div className="bg-gradient-to-r from-gray-900/80 via-gray-800/80 to-gray-900/80 rounded-3xl p-8 md:p-12 text-center max-w-3xl mx-auto backdrop-blur-xl border border-gray-700/50 shadow-[0_0_50px_rgba(0,0,0,0.3)]">
           <div className="inline-block mb-6 px-6 py-2 bg-green-500/10 rounded-full border border-green-500/20">
             <span className="text-green-400 font-semibold tracking-wide">SPECIAL LAUNCH OFFER</span>
           </div>
-          <h2 className="text-4xl font-bold mb-6 text-white">Start Today</h2>
-          <div className="text-7xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Start Today</h2>
+          <div className="text-5xl md:text-7xl font-bold mb-6">
             <span className="text-white">$10</span>
-            <span className="text-gray-400 text-2xl">/month</span>
+            <span className="text-gray-400 text-xl md:text-2xl">/month</span>
           </div>
-          <p className="text-gray-300 mb-8 text-xl leading-relaxed">
+          <p className="text-gray-300 mb-8 text-lg md:text-xl leading-relaxed">
             Access all premium AI models for less than the price of a single subscription
           </p>
           <button
             onClick={handleSubscribe}
             disabled={isLoading}
-            className="group relative inline-flex items-center justify-center px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full text-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_50px_rgba(66,153,225,0.5)] mb-6 overflow-hidden"
+            className="group relative inline-flex items-center justify-center px-8 md:px-12 py-4 md:py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-full text-lg md:text-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_50px_rgba(66,153,225,0.5)] mb-6 overflow-hidden w-full md:w-auto"
           >
             <span className="relative z-10 bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300">
               {isLoading ? 'Processing...' : 'Get Started Now'}
