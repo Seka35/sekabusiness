@@ -25,7 +25,7 @@ const Blog: React.FC = () => {
       
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('*, categories(*)')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -92,13 +92,6 @@ const Blog: React.FC = () => {
               className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700"
             >
               <h2 className="text-2xl font-semibold mb-4">{post.title}</h2>
-              {post.categories && (
-                <div className="mb-4">
-                  <span className="text-sm bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
-                    {post.categories.name}
-                  </span>
-                </div>
-              )}
               <div className="prose prose-invert max-w-none">
                 <div className="text-gray-300 line-clamp-3 whitespace-pre-line mb-4">
                   {post.excerpt || post.description}
