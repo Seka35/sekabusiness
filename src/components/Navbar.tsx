@@ -85,6 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({ items }) => {
   }, []);
 
   const handleAuth = async () => {
+    setIsMenuOpen(false);
     if (isLoggedIn) {
       const { error } = await supabase.auth.signOut();
       if (error) {
