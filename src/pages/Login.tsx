@@ -79,13 +79,12 @@ const Login = () => {
     try {
       setIsResetting(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/update-password`,
+        redirectTo: 'https://seka.business/#/update-password',
       });
 
       if (error) throw error;
 
       toast.success('Si un compte existe avec cet email, vous recevrez les instructions de réinitialisation');
-      // Ajouter un délai pour que l'utilisateur puisse lire le message
       await new Promise(resolve => setTimeout(resolve, 2000));
       setIsResetting(false);
     } catch (error: any) {
