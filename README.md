@@ -38,17 +38,16 @@ Instead of paying for multiple AI services, Seka Premium gives you:
 - Startups & Solopreneurs  
 - Anyone who wants the power of AI, simplified.
 
-## 🔧 Tech Stack *(placeholder - update with your stack)*
-
+## 🔧 Tech Stack 
 - **Frontend**: React / TailwindCSS  
 - **Backend**: Supabase / Node.js  
 - **Auth & Payments**: Supabase Auth + Stripe  
-- **Deployment**: Vercel / Netlify  
+- **Deployment**: Netlify  
 
 ## 📬 Contact
 
 Questions or suggestions?  
-📧 [hello@seka.business](mailto:hello@seka.business)
+📧 [contact@seka.business](mailto:contact@seka.business)
 
 ---
 
