@@ -619,8 +619,8 @@ const Chat: React.FC = () => {
             </div>
           </div>
           
-          {/* Zone de saisie fixe */}
-          <div className="sticky bottom-0 bg-gray-900 pt-4 pb-6">
+          {/* Zone de saisie */}
+          <div className="sticky bottom-0 pt-4 pb-6">
             <div className="flex gap-4">
               <input
                 type="text"
@@ -628,15 +628,15 @@ const Chat: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                 placeholder="Type your message... (Shift + Enter for new line)"
-                className="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 min-w-0"
+                className="flex-1 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm text-blue-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700/50 min-w-0"
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!input.trim() || isTyping}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-2 shrink-0 ${
                   !input.trim() || isTyping
-                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                    ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600/90 to-purple-600/90 hover:from-blue-700/90 hover:to-purple-700/90 text-white'
                 }`}
               >
                 {isTyping ? (
