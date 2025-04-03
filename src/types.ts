@@ -17,6 +17,7 @@ export interface BlogPost {
   title: string;
   content: string;
   description: string;
+  excerpt: string;
   image_url?: string;
   category_id: string;
   subcategory?: string;
@@ -44,9 +45,12 @@ export interface Tool {
   name: string;
   description: string;
   category_id: string;
+  subcategory: string;
   price_type: 'free' | 'freemium' | 'paid';
+  price?: string;
   logo_url?: string;
   website_link?: string;
+  affiliate_link?: string;
   created_at?: string;
   categories?: {
     name: string;

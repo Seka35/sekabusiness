@@ -18,6 +18,7 @@ const Blog: React.FC = () => {
     const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
+      .eq('published', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -33,7 +34,7 @@ const Blog: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
         Blog
       </h1>
@@ -47,7 +48,7 @@ const Blog: React.FC = () => {
             <h2 className="text-2xl font-semibold mb-4">{post.title}</h2>
             <div className="prose prose-invert max-w-none">
               <div className="text-gray-300 line-clamp-3 whitespace-pre-line mb-4">
-                {post.excerpt}
+                {post.excerpt || post.description}
               </div>
             </div>
             <button
