@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Lock } from 'lucide-react';
@@ -9,6 +9,20 @@ const UpdatePassword: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Récupérer et appliquer le token d'accès depuis l'URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    const accessToken = new URLSearchParams(hash.substring(hash.indexOf('?'))).get('access_token');
+    
+    if (accessToken) {
+      // Définir la session avec le token
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '',
+      });
+    }
+  }, []);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,9 +46,13 @@ const UpdatePassword: React.FC = () => {
       if (error) throw error;
 
       toast.success('Mot de passe mis à jour avec succès');
-      navigate('/login');
+      // Rediriger vers la page de login après une mise à jour réussie
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la mise à jour');
+      console.error('Error updating password:', error);
+      toast.error(error.message || 'Erreur lors de la mise à jour du mot de passe');
     } finally {
       setIsLoading(false);
     }
