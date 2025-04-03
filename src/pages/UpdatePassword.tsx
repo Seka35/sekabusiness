@@ -10,12 +10,19 @@ const UpdatePassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Récupérer le token directement depuis l'URL
-  const getAccessToken = () => {
-    const fragment = window.location.hash;
-    const params = new URLSearchParams(fragment.slice(fragment.indexOf('?')));
-    return params.get('access_token');
-  };
+  useEffect(() => {
+    // Écouter les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // L'utilisateur arrive depuis le lien de réinitialisation
+        console.log("Password recovery event detected");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,20 +39,7 @@ const UpdatePassword: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
-      // Récupérer le token
-      const accessToken = getAccessToken();
-      if (!accessToken) {
-        throw new Error('Token de récupération invalide');
-      }
 
-      // Créer un nouveau client Supabase avec le token
-      const supabaseWithAuth = supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: '',
-      });
-
-      // Mettre à jour le mot de passe
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
