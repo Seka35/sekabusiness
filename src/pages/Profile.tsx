@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import UpdateTitles from '../components/UpdateTitles';
 
 ChartJS.register(
   CategoryScale,
@@ -126,7 +127,7 @@ const Profile: React.FC = () => {
         // Fetch recent chats
         const { data: chatsData } = await supabase
           .from('chat_history')
-          .select('id, messages, created_at')
+          .select('id, title, messages, created_at')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false })
           .limit(5);
@@ -134,7 +135,7 @@ const Profile: React.FC = () => {
         if (chatsData) {
           const formattedChats = chatsData.map(chat => ({
             id: chat.id,
-            title: getFirstMessage(chat.messages),
+            title: chat.title || getFirstMessage(chat.messages) || 'Nouvelle conversation',
             last_message: getLastMessage(chat.messages),
             created_at: chat.created_at
           }));
@@ -206,14 +207,26 @@ const Profile: React.FC = () => {
 
   const getLastMessage = (messages: string): string => {
     try {
-      const parsedMessages = JSON.parse(messages);
-      if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-        const lastMessage = parsedMessages[parsedMessages.length - 1];
-        const content = lastMessage.content.slice(0, 50);
+      // Vérifier si le message commence par [{ pour un tableau JSON
+      if (messages.trim().startsWith('[{')) {
+        const parsedMessages = JSON.parse(messages);
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          const lastMessage = parsedMessages[parsedMessages.length - 1];
+          const content = lastMessage.content.slice(0, 50);
+          return content + (content.length > 50 ? '...' : '');
+        }
+      }
+      
+      // Si ce n'est pas un tableau JSON, essayer d'extraire le contenu directement
+      const contentMatch = messages.match(/\"content\":\"([^\"]+)\"/);
+      if (contentMatch && contentMatch[1]) {
+        const content = contentMatch[1].slice(0, 50);
         return content + (content.length > 50 ? '...' : '');
       }
-    } catch (e) {}
-    return 'No messages yet';
+    } catch (e) {
+      console.error('Error parsing message:', e);
+    }
+    return 'Pas de message';
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -364,6 +377,29 @@ const Profile: React.FC = () => {
     }
   };
 
+  const loadChatHistory = async () => {
+    try {
+      const { data: chatsData } = await supabase
+        .from('chat_history')
+        .select('id, title, messages, created_at')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (chatsData) {
+        const formattedChats = chatsData.map(chat => ({
+          id: chat.id,
+          title: chat.title || getFirstMessage(chat.messages) || 'Nouvelle conversation',
+          last_message: getLastMessage(chat.messages),
+          created_at: chat.created_at
+        }));
+        setRecentChats(formattedChats);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -458,9 +494,12 @@ const Profile: React.FC = () => {
             </div>
           )}
 
-          {/* Recent Chats */}
+          {/* Recent Conversations */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Recent Conversations</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Recent Conversations</h2>
+              <UpdateTitles onUpdate={() => loadChatHistory()} />
+            </div>
             <div className="grid gap-4">
               {recentChats.map(chat => (
                 <div
