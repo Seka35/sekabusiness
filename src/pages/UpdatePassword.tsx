@@ -10,25 +10,12 @@ const UpdatePassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Récupérer le type et le token depuis l'URL
-    const params = new URLSearchParams(window.location.hash.substring(1));
-    const type = params.get('type');
-    const accessToken = params.get('access_token');
-
-    if (type === 'recovery' && accessToken) {
-      // Établir la session avec le token de récupération
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session) {
-          // Si pas de session, on initialise avec le token
-          supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: '',
-          }).catch(console.error);
-        }
-      });
-    }
-  }, []);
+  // Récupérer le token directement depuis l'URL
+  const getAccessToken = () => {
+    const fragment = window.location.hash;
+    const params = new URLSearchParams(fragment.slice(fragment.indexOf('?')));
+    return params.get('access_token');
+  };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +33,20 @@ const UpdatePassword: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Récupérer le token
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        throw new Error('Token de récupération invalide');
+      }
+
+      // Créer un nouveau client Supabase avec le token
+      const supabaseWithAuth = supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '',
+      });
+
       // Mettre à jour le mot de passe
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
@@ -55,10 +54,7 @@ const UpdatePassword: React.FC = () => {
 
       toast.success('Mot de passe mis à jour avec succès');
       
-      // Se déconnecter après la mise à jour
-      await supabase.auth.signOut();
-      
-      // Rediriger vers la page de login
+      // Rediriger vers la page de login après un court délai
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -71,7 +67,7 @@ const UpdatePassword: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-xl">
+    <div className="max-w-md mx-auto p-6 bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-xl mt-20">
       <h2 className="text-2xl font-bold mb-6 text-center">Nouveau mot de passe</h2>
       <form onSubmit={handleUpdatePassword} className="space-y-4">
         <div>
