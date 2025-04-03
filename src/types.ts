@@ -25,8 +25,15 @@ export interface Tool {
   id: string;
   name: string;
   description: string;
-  category: string;
+  category_id: string;
+  price_type: 'free' | 'freemium' | 'paid';
+  logo_url?: string;
+  website_link?: string;
   created_at?: string;
+  categories?: {
+    name: string;
+    slug: string;
+  };
 }
 
 export interface Category {
@@ -34,4 +41,5 @@ export interface Category {
   name: string;
   description: string;
   created_at?: string;
+  slug?: string;
 } 
