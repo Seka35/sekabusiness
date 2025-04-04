@@ -47,7 +47,8 @@ export interface Tool {
   name: string;
   description: string;
   logo_url?: string;
-  url: string;
+  website_link: string;
+  url?: string;
   price_type: string;
   category_id: string;
   subcategory?: string;
@@ -56,14 +57,13 @@ export interface Tool {
     id: string;
     name: string;
     slug: string;
-    description?: string;
   };
 }
 
 export interface Category {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   created_at?: string;
   slug?: string;
 }

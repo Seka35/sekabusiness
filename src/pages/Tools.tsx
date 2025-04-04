@@ -23,7 +23,7 @@ const Tools: React.FC = () => {
         // Fetch categories first
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
-          .select('id, name, slug, description')
+          .select('id, name, slug')
           .order('name');
 
         if (categoriesError) {
@@ -37,7 +37,17 @@ const Tools: React.FC = () => {
         // Then fetch tools
         const { data: toolsData, error: toolsError } = await supabase
           .from('tools')
-          .select('*')
+          .select(`
+            id,
+            name,
+            description,
+            logo_url,
+            website_link,
+            price_type,
+            category_id,
+            subcategory,
+            created_at
+          `)
           .order('created_at', { ascending: false });
 
         if (toolsError) {
@@ -47,12 +57,17 @@ const Tools: React.FC = () => {
 
         console.log('Tools fetched:', toolsData);
 
-        // Map tools with their categories
+        // Map tools with their categories and fix the url property
         const toolsWithCategories = toolsData?.map(tool => {
           const category = categoriesData?.find(cat => cat.id === tool.category_id);
           return {
             ...tool,
-            categories: category
+            url: tool.website_link, // Map website_link to url for compatibility
+            categories: category ? {
+              id: category.id,
+              name: category.name,
+              slug: category.slug
+            } : undefined
           };
         }) || [];
 
