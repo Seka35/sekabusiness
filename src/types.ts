@@ -50,6 +50,7 @@ export interface Tool {
   url: string;
   price_type: string;
   category_id: string;
+  subcategory?: string;
   created_at?: string;
   categories?: {
     id: string;
