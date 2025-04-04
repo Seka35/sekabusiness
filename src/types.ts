@@ -46,17 +46,16 @@ export interface Tool {
   id: string;
   name: string;
   description: string;
-  category_id: string;
-  subcategory: string;
-  price_type: 'free' | 'freemium' | 'paid';
-  price?: string;
   logo_url?: string;
-  website_link?: string;
-  affiliate_link?: string;
+  url: string;
+  price_type: string;
+  category_id: string;
   created_at?: string;
   categories?: {
+    id: string;
     name: string;
     slug: string;
+    description?: string;
   };
 }
 
