@@ -16,7 +16,7 @@ const UpdateTitles: React.FC<UpdateTitlesProps> = ({ onUpdate }) => {
     try {
       setIsUpdating(true);
       
-      // Récupérer toutes les conversations sans titre
+      // Get all conversations without titles
       const { data: chats, error } = await supabase
         .from('chat_history')
         .select('*')
@@ -25,11 +25,11 @@ const UpdateTitles: React.FC<UpdateTitlesProps> = ({ onUpdate }) => {
       if (error) throw error;
 
       if (!chats || chats.length === 0) {
-        toast.success('Aucune conversation à mettre à jour');
+        toast.success('No conversations to update');
         return;
       }
 
-      // Mettre à jour chaque conversation
+      // Update each conversation
       let updated = 0;
       for (const chat of chats) {
         try {
@@ -47,14 +47,14 @@ const UpdateTitles: React.FC<UpdateTitlesProps> = ({ onUpdate }) => {
         }
       }
 
-      toast.success(`${updated} conversation(s) mise(s) à jour`);
-      // Appeler la fonction de rafraîchissement si elle existe
+      toast.success(`${updated} conversation(s) updated`);
+      // Call refresh function if it exists
       if (onUpdate) {
         onUpdate();
       }
     } catch (error) {
       console.error('Error updating titles:', error);
-      toast.error('Erreur lors de la mise à jour des titres');
+      toast.error('Error updating titles');
     } finally {
       setIsUpdating(false);
     }
@@ -69,10 +69,10 @@ const UpdateTitles: React.FC<UpdateTitlesProps> = ({ onUpdate }) => {
       {isUpdating ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          Mise à jour des titres...
+          Updating titles...
         </>
       ) : (
-        'Mettre à jour les titres'
+        'Update Titles'
       )}
     </button>
   );
