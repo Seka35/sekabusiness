@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { N8nScript } from '../types/index';
-import { Download } from 'lucide-react';
+import { Download, ChevronDown, ChevronUp, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ const N8nScripts: React.FC = () => {
   const [scripts, setScripts] = useState<N8nScript[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedScript, setSelectedScript] = useState<N8nScript | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -124,31 +125,68 @@ const N8nScripts: React.FC = () => {
           <p>No scripts available yet.</p>
         </div>
       ) : (
-        <div className="grid gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {scripts.map((script) => (
             <article
               key={script.id}
-              className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700"
+              className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 hover:border-blue-500/50 transition-colors"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-semibold mb-4">{script.title}</h2>
-                  <div className="prose prose-invert max-w-none">
-                    <div className="text-gray-300 whitespace-pre-line mb-4">
-                      {script.description}
-                    </div>
-                  </div>
+              <div className="flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl font-semibold">{script.title}</h2>
+                  <button
+                    onClick={() => handleDownload(script)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDownload(script)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <Download className="w-5 h-5" />
-                  Download
-                </button>
+                <div className="prose prose-invert max-w-none flex-grow">
+                  <div className="text-gray-300 line-clamp-3 mb-2">
+                    {script.description}
+                  </div>
+                  <button
+                    onClick={() => setSelectedScript(script)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 mt-2"
+                  >
+                    Read more <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {/* Modal pour afficher les détails complets */}
+      {selectedScript && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-semibold">{selectedScript.title}</h2>
+              <button
+                onClick={() => setSelectedScript(null)}
+                className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="prose prose-invert max-w-none mb-6">
+              <div className="text-gray-300 whitespace-pre-line">
+                {selectedScript.description}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => handleDownload(selectedScript)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                Download
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
