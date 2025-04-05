@@ -1292,7 +1292,7 @@ const Admin: React.FC = () => {
                         <td className="py-4 px-4">
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => toggleUserStatus(user.id, user.subscription_status)}
+                              onClick={() => user.id && toggleUserStatus(user.id, user.subscription_status || 'inactive')}
                               className="p-1 hover:bg-gray-700 rounded"
                               title={user.subscription_status === 'active' ? 'Deactivate' : 'Activate'}
                             >

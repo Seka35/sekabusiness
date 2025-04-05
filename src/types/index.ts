@@ -64,6 +64,7 @@ export interface ChatMessage {
   user_id: string;
   messages: string;
   created_at: string;
+  email: string;
 }
 
 export interface ParsedMessage {
