@@ -9,8 +9,10 @@ import Chat from './pages/Chat';
 import Subscribe from './pages/Subscribe';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
-import { Monitor, BookOpen, MessageSquare, User } from 'lucide-react';
+import N8nScripts from './pages/N8nScripts';
+import { Monitor, BookOpen, MessageSquare, User, FileJson } from 'lucide-react';
 import AdminRoute from './components/AdminRoute';
+import PrivateRoute from './components/PrivateRoute';
 import UpdatePassword from './pages/UpdatePassword';
 
 function App() {
@@ -19,6 +21,7 @@ function App() {
     { name: 'Prompts', path: '/prompts', icon: BookOpen },
     { name: 'Blog', path: '/blog', icon: Monitor },
     { name: 'Chat', path: '/chat', icon: MessageSquare },
+    { name: 'N8N', path: '/n8n-scripts', icon: FileJson },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
@@ -31,6 +34,11 @@ function App() {
             <Route path="/" element={<Tools />} />
             <Route path="/prompts" element={<Prompts />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/n8n-scripts" element={
+              <PrivateRoute>
+                <N8nScripts />
+              </PrivateRoute>
+            } />
             <Route
               path="/admin"
               element={

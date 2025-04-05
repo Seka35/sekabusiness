@@ -46,3 +46,12 @@ export interface User {
   id: string;
   email: string;
 }
+
+export interface N8nScript {
+  id: string;
+  title: string;
+  description: string;
+  file_url: string;
+  created_at: string;
+  updated_at: string;
+}

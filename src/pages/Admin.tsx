@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tool, Prompt, BlogPost, Category, User, ChatMessage, ParsedMessage } from '../types';
+import { Tool, Prompt, BlogPost, Category, User, ChatMessage, ParsedMessage, N8nScript } from '../types';
 import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code, Users as UsersIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';
@@ -12,7 +12,7 @@ import ChatHistory from '../components/ChatHistory';
 const Admin: React.FC = () => {
   const { t } = useTranslation();
   const [session, setSession] = useState<Session | null>(null);
-  const [activeTab, setActiveTab] = useState<'tools' | 'prompts' | 'blog' | 'users' | 'chat'>('tools');
+  const [activeTab, setActiveTab] = useState<'tools' | 'prompts' | 'blog' | 'users' | 'chat' | 'n8n'>('tools');
   const [tools, setTools] = useState<Tool[]>([]);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -67,6 +67,14 @@ const Admin: React.FC = () => {
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [selectedChat, setSelectedChat] = useState<ChatMessage | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
+
+  const [n8nForm, setN8nForm] = useState({
+    title: '',
+    description: '',
+    file: null as File | null,
+  });
+
+  const [n8nScripts, setN8nScripts] = useState<N8nScript[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -136,6 +144,15 @@ const Admin: React.FC = () => {
     if (postsData) {
       setPosts(postsData);
       setFilteredPosts(postsData);
+    }
+
+    // Fetch n8n scripts
+    const { data: scriptsData } = await supabase
+      .from('n8n_scripts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (scriptsData) {
+      setN8nScripts(scriptsData);
     }
   };
 
@@ -375,7 +392,7 @@ const Admin: React.FC = () => {
     setShowToolForm(true);
   };
 
-  const handleEdit = (item: any, type: 'tools' | 'prompts' | 'blog') => {
+  const handleEdit = (item: any, type: 'tools' | 'prompts' | 'blog' | 'n8n') => {
     setIsEditing(true);
     setEditingId(item.id);
     setActiveTab(type);
@@ -405,6 +422,12 @@ const Admin: React.FC = () => {
         title: item.title,
         content: item.content,
         excerpt: item.excerpt,
+      });
+    } else if (type === 'n8n') {
+      setN8nForm({
+        title: item.title,
+        description: item.description,
+        file: null,
       });
     }
   };
@@ -570,6 +593,80 @@ const Admin: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleN8nSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        // Update existing script
+        const updates: any = {
+          title: n8nForm.title,
+          description: n8nForm.description,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (n8nForm.file) {
+          // Upload new file if provided
+          const fileExt = n8nForm.file.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from('n8n')
+            .upload(fileName, n8nForm.file);
+
+          if (uploadError) throw uploadError;
+          updates.file_url = fileName;
+        }
+
+        const { error } = await supabase
+          .from('n8n_scripts')
+          .update(updates)
+          .eq('id', editingId);
+
+        if (error) throw error;
+        toast.success('Script updated successfully');
+      } else {
+        // Add new script
+        if (!n8nForm.file) {
+          toast.error('Please select a file');
+          return;
+        }
+
+        const fileExt = n8nForm.file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        
+        // Upload file to storage
+        const { error: uploadError } = await supabase.storage
+          .from('n8n')
+          .upload(fileName, n8nForm.file);
+
+        if (uploadError) throw uploadError;
+
+        // Create database entry
+        const { error } = await supabase
+          .from('n8n_scripts')
+          .insert([{
+            title: n8nForm.title,
+            description: n8nForm.description,
+            file_url: fileName,
+          }]);
+
+        if (error) throw error;
+        toast.success('Script added successfully');
+      }
+
+      setN8nForm({
+        title: '',
+        description: '',
+        file: null,
+      });
+      setEditingId(null);
+      setIsEditing(false);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to save script');
+      console.error('Error:', error);
+    }
+  };
+
   if (!session) {
     return (
       <div className="max-w-md mx-auto mt-20">
@@ -660,6 +757,16 @@ const Admin: React.FC = () => {
           }`}
         >
           Chat History
+        </button>
+        <button
+          onClick={() => setActiveTab('n8n')}
+          className={`px-4 py-2 rounded ${
+            activeTab === 'n8n'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          N8n Scripts
         </button>
       </div>
 
@@ -1219,6 +1326,107 @@ const Admin: React.FC = () => {
             setChatHistory={setChatHistory}
             isLoading={isLoadingChat}
           />
+        )}
+
+        {/* N8n Scripts Management */}
+        {activeTab === 'n8n' && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Manage N8n Scripts</h2>
+            
+            {/* Add/Edit N8n Script Form */}
+            <form onSubmit={handleN8nSubmit} className="mb-8 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Title</label>
+                <input
+                  type="text"
+                  value={n8nForm.title}
+                  onChange={(e) => setN8nForm({ ...n8nForm, title: e.target.value })}
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea
+                  value={n8nForm.description}
+                  onChange={(e) => setN8nForm({ ...n8nForm, description: e.target.value })}
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">File</label>
+                <input
+                  type="file"
+                  onChange={(e) => setN8nForm({ ...n8nForm, file: e.target.files?.[0] || null })}
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none"
+                  accept=".json"
+                  required={!editingId}
+                />
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors flex items-center"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isEditing ? 'Update Script' : 'Add Script'}
+                </button>
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditingId(null);
+                      setN8nForm({
+                        title: '',
+                        description: '',
+                        file: null,
+                      });
+                    }}
+                    className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700 transition-colors flex items-center"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* N8n Scripts List */}
+            <div className="space-y-4">
+              {n8nScripts.map((script) => (
+                <div
+                  key={script.id}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-semibold">{script.title}</h3>
+                      <p className="text-gray-300 mt-2">{script.description}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(script, 'n8n')}
+                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                        title="Edit script"
+                      >
+                        <Edit className="w-5 h-5 text-blue-400" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(script.id, 'n8n_scripts')}
+                        className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                        title="Delete script"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
