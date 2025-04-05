@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tool, Prompt, BlogPost, Category, User, ChatMessage, ParsedMessage, N8nScript } from '../types';
+import { Tool, Prompt, BlogPost, Category, User, ChatMessage, ParsedMessage, N8nScript } from '../types/index';
 import { Edit, Trash2, Save, X, ChevronUp, ChevronDown, Code, Users as UsersIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SearchBar from '../components/SearchBar';

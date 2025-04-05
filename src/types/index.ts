@@ -45,6 +45,9 @@ export interface BlogPost {
 export interface User {
   id: string;
   email: string;
+  created_at?: string;
+  last_login?: string | null;
+  subscription_status?: 'active' | 'inactive' | 'cancelled';
 }
 
 export interface N8nScript {
@@ -54,4 +57,16 @@ export interface N8nScript {
   file_url: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  messages: string;
+  created_at: string;
+}
+
+export interface ParsedMessage {
+  role: string;
+  content: string;
 }
