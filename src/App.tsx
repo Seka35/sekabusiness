@@ -32,8 +32,16 @@ function App() {
         <main className="container mx-auto px-4 py-8 pt-24">
           <Routes>
             <Route path="/" element={<Tools />} />
-            <Route path="/prompts" element={<Prompts />} />
-            <Route path="/blog" element={<Blog />} />
+            <Route path="/prompts" element={
+              <PrivateRoute>
+                <Prompts />
+              </PrivateRoute>
+            } />
+            <Route path="/blog" element={
+              <PrivateRoute>
+                <Blog />
+              </PrivateRoute>
+            } />
             <Route path="/n8n-scripts" element={
               <PrivateRoute>
                 <N8nScripts />
